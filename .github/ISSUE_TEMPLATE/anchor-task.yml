@@ -1,0 +1,21 @@
+name: Anchor Task
+description: Smart contract / program work
+title: "[Program] "
+labels: [program]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be true when this is done?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / Notes
+  - type: textarea
+    id: tests
+    attributes:
+      label: Tests
+      description: What tests should be added/updated?

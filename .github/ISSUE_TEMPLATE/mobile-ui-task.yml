@@ -1,0 +1,21 @@
+name: Mobile UI Task
+description: React Native / Seeker UX work
+title: "[Mobile] "
+labels: [mobile]
+body:
+  - type: textarea
+    id: screen
+    attributes:
+      label: Screen / Component
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+    validations:
+      required: true
+  - type: textarea
+    id: design
+    attributes:
+      label: Design notes

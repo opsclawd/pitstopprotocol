@@ -1,0 +1,15 @@
+name: Content / Launch
+description: Docs, video, launch posts
+title: "[Content] "
+labels: [content]
+body:
+  - type: textarea
+    id: deliverable
+    attributes:
+      label: Deliverable
+    validations:
+      required: true
+  - type: textarea
+    id: outline
+    attributes:
+      label: Outline / Notes
