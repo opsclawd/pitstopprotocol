@@ -19,3 +19,6 @@ Most relevant sample patterns:
 - `apps/mobile` implements it using Mobile Wallet Adapter (Seeker-compatible).
 - `apps/web` implements it using standard web wallet adapters later.
 
+
+## Program design docs
+- Account model + constants: `docs/program/account-model.md`
