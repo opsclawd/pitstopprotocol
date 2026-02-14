@@ -1,0 +1,12 @@
+{
+  "name": "@pitstopprotocol/mobile",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "echo \"TODO: bootstrap bare React Native app\"",
+    "build": "echo \"TODO\"",
+    "lint": "echo \"(todo)\"",
+    "typecheck": "echo \"(todo)\"",
+    "test": "echo \"(todo)\""
+  }
+}
