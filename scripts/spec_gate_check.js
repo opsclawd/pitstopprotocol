@@ -21,3 +21,5 @@ for (const f of fs.readdirSync(dir)){
 }
 
 console.log('spec gate check ok');
+
+if (!fs.existsSync("tests/instructions/initialize.spec.js")) fail("Missing required initialize test pack: tests/instructions/initialize.spec.js");

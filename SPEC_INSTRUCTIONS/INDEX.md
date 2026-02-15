@@ -6,7 +6,7 @@ Authoritative instruction inventory for MVP (count: 12).
 
 | # | Instruction | Status | Touches Tokens | Emits Events | Changes Market Status | Tests Required |
 |---|-------------|--------|----------------|--------------|-----------------------|----------------|
-| 1 | initialize | Draft | N | Y | N | unit + integration |
+| 1 | initialize | LOCKED | N | Y | N | unit + integration |
 | 2 | create_market | Draft | Y | Y | Seeding init | integration + adversarial |
 | 3 | add_outcome | Draft | N | Y | N | integration |
 | 4 | finalize_seeding | Draft | N | Y | Seeding->Open | integration |
