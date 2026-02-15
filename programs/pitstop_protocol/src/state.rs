@@ -69,3 +69,16 @@ pub struct Position {
     /// PDA bump used for signer-seed reconstruction.
     pub bump: u8,
 }
+
+
+impl Position {
+    /// Byte size used when initializing Position PDA.
+    pub const INIT_SPACE: usize = 8  // discriminator
+        + 32 // user
+        + 32 // market
+        + 1  // driver_index
+        + 8  // amount_lamports
+        + 1  // claimed
+        + 8  // last_bet_ts
+        + 1; // bump
+}
