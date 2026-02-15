@@ -39,8 +39,36 @@ const { invokePlaceBetOnProgram } = require('../harness/place_bet_adapter');
   assert.equal(ok.vaultAmount, 1100);
   assert.equal(ok.market.totalPool, ok.vaultAmount, 'PBT-INV-002 pre-resolution vault == market total');
   assert.equal(ok.event.name, 'BetPlaced');
+  assert.equal(ok.event.market, base.market);
+  assert.equal(ok.event.user, base.user);
+  assert.equal(ok.event.outcome_id, base.outcomeId);
+  assert.equal(ok.event.amount, base.amount);
+  assert.equal(ok.event.timestamp, nowTs);
   assert.equal(ok.event.market_total_pool, 1100);
   assert.equal(ok.event.outcome_pool_amount, 500);
+
+
+
+  // PBT-HP-002: init_if_needed style new position starts at zero and increments.
+  const newPos = await invokePlaceBetOnProgram({
+    ...base,
+    user: 'UserB',
+    userPositionAmount: 0,
+    positionState: { amount: 0 },
+    amount: 75,
+    outcomePoolAmount: 200,
+    marketTotalPool: 500,
+    vaultAmount: 500,
+  });
+  assert.equal(newPos.ok, true);
+  assert.equal(newPos.position.amount, 75);
+  assert.equal(newPos.market.totalPool, 575);
+  assert.equal(newPos.outcomePool.poolAmount, 275);
+
+  // PBT-INV-001: sum(outcome pools) == market.total_pool (modeled with multi-pool snapshot).
+  const otherOutcomePoolAmount = 300;
+  const modeledSumPools = newPos.outcomePool.poolAmount + otherOutcomePoolAmount;
+  assert.equal(modeledSumPools, newPos.market.totalPool, 'sum(outcome pools) must equal market.total_pool');
 
   // PBT-REJ-001..010
   const cases = [
