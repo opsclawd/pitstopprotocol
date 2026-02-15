@@ -34,3 +34,9 @@ This repo is now in **spec-first + TDD pivot mode** for a USDC-based Anchor prot
 - [ ] Canonical encoding includes byte-level format + test vectors
 - [ ] Runnable test harness exists and passes smoke tests
 - [ ] CI runs tests (not placeholders)
+
+
+## Repository cleanup note
+- Legacy pre-pivot app scaffolds and docs were removed.
+- `packages/core/src/protocol_primitives.cjs` is retained intentionally as the canonical shared primitives module used by unit tests and future implementation code.
+- `programs/` is retained intentionally as the target Anchor program location for upcoming protocol implementation issues.

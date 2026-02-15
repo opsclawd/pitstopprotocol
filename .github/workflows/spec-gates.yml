@@ -15,4 +15,4 @@ jobs:
       - name: Spec gate check
         run: node scripts/spec_gate_check.js
       - name: Canonical vector smoke
-        run: node tests/canonical.spec.js
+        run: node tests/unit/canonical_ids.spec.js

@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install deps
-        run: npm ci --ignore-scripts || npm install --ignore-scripts
+      - name: Install deps (deterministic)
+        run: npm ci --ignore-scripts
       - name: Run deterministic harness smoke
         run: HARNESS_NOW_SECS=1800000000 node tests/harness/smoke.spec.js
