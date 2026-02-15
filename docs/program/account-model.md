@@ -9,8 +9,8 @@ MVP constraints:
 ## Seeds
 
 ### Market PDA
-- Seeds: `b"market"`, `race_id_hash[32]`
-- One market per race.
+- Seeds: `b"market"`, `authority_pubkey`, `race_id_hash[32]`
+- One market per `(authority, race)` pair (prevents global market squatting).
 
 ### Position PDA (user bet position)
 - Seeds: `b"position"`, `market_pubkey`, `user_pubkey`
