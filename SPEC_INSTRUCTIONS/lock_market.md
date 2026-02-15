@@ -1,17 +1,28 @@
 # lock_market
-Status: Draft v1.0.0
+Version: v1.0.1
+Status: LOCKED
+
+## Purpose
+Stop betting by transitioning an open market to locked at/after lock timestamp.
 
 ## Inputs
-- TODO
+- none
+
+## Accounts
+- authority signer
+- config (authority check)
+- market mut
 
 ## Preconditions
-- TODO
+- authority == config.authority -> `Unauthorized`
+- market.status == Open -> `MarketNotOpen`
+- now < lock_timestamp -> `TooEarlyToLock`
 
 ## Effects
-- TODO
+- market.status = Locked
 
-## Failure modes
-- TODO
+## Events
+- `MarketLocked`
 
-## Postconditions
-- TODO
+## Required tests
+- LKM-HP-001, LKM-REJ-001..003

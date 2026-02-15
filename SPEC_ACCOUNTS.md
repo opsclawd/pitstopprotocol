@@ -1,5 +1,5 @@
 # SPEC_ACCOUNTS.md
-Version: v1.0.0
+Version: v1.0.1
 Status: DRAFT
 
 Canonical account layout contract.
@@ -47,5 +47,6 @@ Canonical account layout contract.
 
 ## Rent/closure policy
 - Vault ATA may be closed in cancel flow if empty.
+- Vault ATA is closed in sweep flow after transferring remaining balance to treasury.
 - OutcomePool reclaim optional (MVP may leave rent dust).
 - Market account remains as historical record.
