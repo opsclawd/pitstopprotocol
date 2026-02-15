@@ -4,6 +4,8 @@ const { computeMarketIdHex } = require('../../packages/core/src/protocol_primiti
 const { invokeCreateMarketOnProgram } = require('../harness/create_market_adapter');
 
 (async function run() {
+  // deterministic adapter timestamp for reproducible conformance tests;
+  // on-chain implementation must source time from Clock.
   const nowTs = 1_800_000_000;
   const eventIdHex = 'a'.repeat(64);
   const marketIdHex = computeMarketIdHex(eventIdHex, 0, 1);
