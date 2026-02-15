@@ -38,35 +38,35 @@ fn recompute_market_id(event_id: [u8; 32], market_type: u8, rules_version: u16) 
 }
 
 fn validate_create_market_preconditions(input: &CreateMarketInput) -> Result<(), PitStopError> {
-    // CRM-REJ-001
+    // CRM-REJ-001: only config.authority can create a market; any signer mismatch is Unauthorized.
     if input.authority != input.config_authority {
         return Err(PitStopError::Unauthorized);
     }
-    // CRM-REJ-002
+    // CRM-REJ-002: token program must remain pinned to SPL Token v1 for custody safety.
     if input.token_program != REQUIRED_TOKEN_PROGRAM {
         return Err(PitStopError::InvalidTokenProgram);
     }
-    // CRM-REJ-003
+    // CRM-REJ-003: lock timestamp must be strictly greater than current timestamp.
     if input.lock_timestamp <= input.now_ts {
         return Err(PitStopError::LockInPast);
     }
-    // CRM-REJ-004a
+    // CRM-REJ-004a: max_outcomes must be >= 1 (zero is invalid).
     if input.max_outcomes == 0 {
         return Err(PitStopError::ZeroOutcomes);
     }
-    // CRM-REJ-004b
+    // CRM-REJ-004b: max_outcomes must not exceed protocol MAX_OUTCOMES.
     if input.max_outcomes > MAX_OUTCOMES {
         return Err(PitStopError::TooManyOutcomes);
     }
-    // CRM-REJ-005a
+    // CRM-REJ-005a: MVP supports only market_type=0 (Winner).
     if input.market_type != SUPPORTED_MARKET_TYPE {
         return Err(PitStopError::UnsupportedMarketType);
     }
-    // CRM-REJ-005b
+    // CRM-REJ-005b: MVP supports only rules_version=1.
     if input.rules_version != SUPPORTED_RULES_VERSION {
         return Err(PitStopError::UnsupportedRulesVersion);
     }
-    // CRM-REJ-006
+    // CRM-REJ-006: recomputed market_id must exactly match provided market_id to prevent canonicalization drift.
     let recomputed = recompute_market_id(input.event_id, input.market_type, input.rules_version);
     if recomputed != input.market_id {
         return Err(PitStopError::InvalidMarketId);
@@ -76,8 +76,10 @@ fn validate_create_market_preconditions(input: &CreateMarketInput) -> Result<(),
 }
 
 pub fn create_market(input: CreateMarketInput) -> Result<(Market, MarketCreated), PitStopError> {
+    // CRM-HP-001: all create_market preconditions must pass before state/event creation.
     validate_create_market_preconditions(&input)?;
 
+    // Effects contract: initialize market in Seeding with zeroed accounting/resolution fields.
     let market = Market {
         market_id: input.market_id,
         event_id: input.event_id,
@@ -94,6 +96,7 @@ pub fn create_market(input: CreateMarketInput) -> Result<(Market, MarketCreated)
         rules_version: input.rules_version,
     };
 
+    // Event contract: emit MarketCreated only after successful market initialization.
     let evt = MarketCreated {
         market: input.market,
         market_id: input.market_id,
@@ -135,7 +138,7 @@ mod tests {
 
     #[test]
     fn recompute_market_id_matches_locked_vector_b() {
-        // SPEC_CANONICAL Vector B:
+        // fixed canonical vector lock (SPEC_CANONICAL Vector B):
         // event_id = 32 zero bytes, market_type=0, rules_version=1 (LE 0100)
         // expected market_id hex = b17820b1fb10fa804a7147ca7fd1e1666c62ef002e9adfd12019b35a28377664
         let event_id = [0u8; 32];
