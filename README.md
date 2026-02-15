@@ -9,6 +9,11 @@ This repo is now in **spec-first + TDD pivot mode** for a USDC-based Anchor prot
   - `SPEC_INVARIANTS.md`
   - `SPEC_CANONICAL.md`
   - `SPEC_THREAT_MODEL.md`
+  - `SPEC_ACCOUNTS.md`
+  - `SPEC_STATE_MACHINE.md`
+  - `SPEC_EVENTS.md`
+  - `SPEC_ERRORS.md`
+  - `SPEC_INSTRUCTIONS/INDEX.md`
   - `SPEC_INSTRUCTIONS/`
 
 ## Process gates
