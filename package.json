@@ -10,7 +10,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "node tests/instructions/initialize.spec.js && node tests/instructions/initialize.conformance.spec.js && node tests/harness/smoke.spec.js && node tests/unit/canonical_ids.spec.js && node tests/unit/timestamp_rules.spec.js && node tests/unit/math.spec.js",
+    "test": "npm run test:all",
     "clean": "turbo clean && git clean -xfd -e node_modules",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
@@ -18,7 +18,8 @@
     "test:initialize:conformance": "node tests/instructions/initialize.conformance.spec.js",
     "test:harness": "node tests/harness/smoke.spec.js",
     "test:harness:deterministic": "HARNESS_NOW_SECS=1800000000 node tests/harness/smoke.spec.js",
-    "test:unit": "node tests/unit/canonical_ids.spec.js && node tests/unit/timestamp_rules.spec.js && node tests/unit/math.spec.js"
+    "test:unit": "node tests/unit/canonical_ids.spec.js && node tests/unit/timestamp_rules.spec.js && node tests/unit/math.spec.js",
+    "test:all": "node scripts/run_all_tests.js"
   },
   "devDependencies": {
     "turbo": "^2.5.0",
