@@ -45,4 +45,9 @@ pub mod pitstop_protocol {
         instructions::place_bet(ctx, driver_index, amount_lamports)
     }
 
+    /// Finalize a market after close by setting the winner outcome.
+    pub fn settle_market(ctx: Context<SettleMarket>, winner_index: u8) -> Result<()> {
+        instructions::settle_market(ctx, winner_index)
+    }
+
 }

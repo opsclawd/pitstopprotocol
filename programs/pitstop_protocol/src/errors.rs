@@ -27,5 +27,11 @@ pub enum PitStopError {
     PositionInvariantViolation,
     #[msg("Invalid market configuration.")]
     InvalidMarketConfig,
+    #[msg("Unauthorized signer for this action.")]
+    Unauthorized,
+    #[msg("Market settlement attempted before close_ts.")]
+    SettlementTooEarly,
+    #[msg("Winner index is out of range for this market.")]
+    InvalidWinnerIndex,
 
 }
