@@ -17,4 +17,6 @@ pub enum PitStopError {
     InvalidOutcomeId,
     MaxOutcomesReached,
     OutcomeMismatch,
+    SeedingIncomplete,
+    TooLateToOpen,
 }
