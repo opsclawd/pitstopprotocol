@@ -1,0 +1,17 @@
+name: rust-tests
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  rust-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+      - name: Run rust tests
+        run: cargo test --workspace --all-targets --locked
