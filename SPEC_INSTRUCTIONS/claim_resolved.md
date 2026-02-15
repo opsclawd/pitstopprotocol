@@ -51,3 +51,7 @@ Allow users to claim winnings (or mark loser claim as zero payout) after resolut
 ## Failure ordering (locked)
 - Status gate is evaluated before vault account usage.
 - In Swept state, claim must fail with `MarketNotResolved` deterministically (not account-missing failure).
+
+
+## Event contract link
+- Event spec reference: `SPEC_EVENTS.md` -> `Claimed`.

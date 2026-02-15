@@ -66,3 +66,7 @@ Args:
 
 ## 11) Required tests
 - CRM-HP-001, CRM-REJ-001..006
+
+
+## Event contract link
+- Event spec reference: `SPEC_EVENTS.md` -> `MarketCreated`.

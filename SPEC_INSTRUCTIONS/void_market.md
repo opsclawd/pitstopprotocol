@@ -28,3 +28,7 @@ Void a locked market so users can claim refunds.
 
 ## Required tests
 - VDM-HP-001, VDM-REJ-001..003
+
+
+## Event contract link
+- Event spec reference: `SPEC_EVENTS.md` -> `MarketVoided`.

@@ -33,3 +33,7 @@ Recovery path to void dead markets during Seeding before bets exist.
 
 ## Required tests
 - CNL-HP-001, CNL-REJ-001..005, CNL-ADV-001
+
+
+## Event contract link
+- Event spec reference: `SPEC_EVENTS.md` -> `MarketCancelled`.

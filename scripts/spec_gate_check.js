@@ -49,3 +49,9 @@ console.log('spec gate check ok');
   if (!/Status:\s*LOCKED/i.test(txt)) fail("SPEC_ERRORS.md must be LOCKED");
   if (!/## Instruction mapping/i.test(txt)) fail("SPEC_ERRORS.md missing instruction mapping section");
 }
+
+{
+  const txt = fs.readFileSync("SPEC_EVENTS.md","utf8");
+  if (!/Status:\s*LOCKED/i.test(txt)) fail("SPEC_EVENTS.md must be LOCKED");
+  if (!/Must-emit matrix/i.test(txt) && !/must-emit matrix/i.test(txt)) fail("SPEC_EVENTS.md missing must-emit matrix section");
+}

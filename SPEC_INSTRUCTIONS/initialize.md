@@ -96,3 +96,7 @@ After success, `config` must satisfy:
 - `INIT-REJ-004` treasury owner mismatch rejected
 - `INIT-REJ-005` invalid caps rejected
 - `INIT-REJ-006` invalid claim window rejected
+
+
+## Event contract link
+- Event spec reference: `SPEC_EVENTS.md` -> `ConfigInitialized`.

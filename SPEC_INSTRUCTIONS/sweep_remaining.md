@@ -65,3 +65,7 @@ After claim window expires, transfer remaining vault balance to treasury and clo
 
 ## Idempotency (locked)
 - Re-running sweep must fail deterministically by status gate (`MarketNotResolved`), not by missing-account error.
+
+
+## Event contract link
+- Event spec reference: `SPEC_EVENTS.md` -> `MarketSweptEvent`.

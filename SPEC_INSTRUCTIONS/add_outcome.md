@@ -43,3 +43,7 @@ Add one outcome pool to a seeding market.
 
 ## Required tests
 - ADO-HP-001, ADO-REJ-001..005
+
+
+## Event contract link
+- Event spec reference: `SPEC_EVENTS.md` -> `OutcomeAdded`.
