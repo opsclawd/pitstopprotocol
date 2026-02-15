@@ -50,7 +50,10 @@ const { invokeInitializeOnProgram } = require('../harness/initialize_adapter');
     [{ usdcDecimals: 9 }, 'InvalidMintDecimals'],
     [{ treasuryMint: 'MintB' }, 'InvalidTreasuryMint'],
     [{ treasuryOwner: 'OtherOwner' }, 'InvalidTreasuryOwner'],
+    [{ maxTotal: 0 }, 'InvalidCap'],
+    [{ maxPerUser: 0 }, 'InvalidCap'],
     [{ maxPerUser: 2_000_000 }, 'InvalidCap'],
+    [{ claimWindowSecs: 0 }, 'InvalidClaimWindow'],
     [{ claimWindowSecs: constants.MAX_CLAIM_WINDOW_SECS + 1 }, 'InvalidClaimWindow'],
   ];
   for (const [patch, expected] of cases) {
@@ -58,6 +61,13 @@ const { invokeInitializeOnProgram } = require('../harness/initialize_adapter');
     assert.equal(out.ok, false);
     assert.equal(out.error, expected);
   }
+
+
+  // inclusive bounds should pass
+  const minWindow = await invokeInitializeOnProgram({ ...base, claimWindowSecs: 1 });
+  assert.equal(minWindow.ok, true);
+  const maxWindow = await invokeInitializeOnProgram({ ...base, claimWindowSecs: constants.MAX_CLAIM_WINDOW_SECS });
+  assert.equal(maxWindow.ok, true);
 
   console.log('initialize conformance tests ok');
 })();
