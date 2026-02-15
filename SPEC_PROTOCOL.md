@@ -25,6 +25,14 @@ Single source of truth for PitStop protocol behavior.
 - Oracle is trusted for resolution payload and winning outcome.
 - Users rely on on-chain custody and deterministic payout math.
 
+
+
+## Protocol constants (authoritative)
+Machine-readable source: `specs/constants.json`
+- `USDC_DECIMALS = 6`
+- `MAX_CLAIM_WINDOW_SECS = 7_776_000` (90 days)
+- `REQUIRED_TOKEN_PROGRAM = Tokenkeg...` (SPL Token v1)
+
 ## Token custody
 - USDC (6 decimals), SPL Token v1 only.
 - Market vault is ATA owned by market PDA.
