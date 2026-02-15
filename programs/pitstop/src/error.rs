@@ -1,9 +1,16 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PitStopError {
+    Unauthorized,
     InvalidTokenProgram,
     InvalidMintDecimals,
     InvalidTreasuryMint,
     InvalidTreasuryOwner,
     InvalidCap,
     InvalidClaimWindow,
+    LockInPast,
+    ZeroOutcomes,
+    TooManyOutcomes,
+    UnsupportedMarketType,
+    UnsupportedRulesVersion,
+    InvalidMarketId,
 }

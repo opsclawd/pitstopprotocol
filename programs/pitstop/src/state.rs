@@ -12,3 +12,30 @@ pub struct Config {
     pub claim_window_secs: i64,
     pub token_program: String,
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MarketStatus {
+    Seeding,
+    Open,
+    Locked,
+    Resolved,
+    Voided,
+    Swept,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Market {
+    pub market_id: [u8; 32],
+    pub event_id: [u8; 32],
+    pub lock_timestamp: i64,
+    pub outcome_count: u8,
+    pub max_outcomes: u8,
+    pub total_pool: u64,
+    pub status: MarketStatus,
+    pub resolved_outcome: Option<u8>,
+    pub resolution_payload_hash: [u8; 32],
+    pub resolution_timestamp: i64,
+    pub vault: String,
+    pub market_type: u8,
+    pub rules_version: u16,
+}
