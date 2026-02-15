@@ -1,11 +1,12 @@
 const assert = require('assert');
 
-const REQUIRED_TOKEN_PROGRAM = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
-const MAX_CLAIM_WINDOW_SECS = 90 * 24 * 60 * 60;
+const constants = require('../../specs/constants.json');
+const REQUIRED_TOKEN_PROGRAM = constants.REQUIRED_TOKEN_PROGRAM;
+const MAX_CLAIM_WINDOW_SECS = constants.MAX_CLAIM_WINDOW_SECS;
 
 function validateInitialize(input) {
   if (input.tokenProgram !== REQUIRED_TOKEN_PROGRAM) return 'InvalidTokenProgram';
-  if (input.usdcDecimals !== 6) return 'InvalidMintDecimals';
+  if (input.usdcDecimals !== constants.USDC_DECIMALS) return 'InvalidMintDecimals';
   if (input.treasuryMint !== input.usdcMint) return 'InvalidTreasuryMint';
   if (input.treasuryOwner !== input.treasuryAuthority) return 'InvalidTreasuryOwner';
   if (

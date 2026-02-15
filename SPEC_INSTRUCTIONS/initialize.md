@@ -1,8 +1,10 @@
 # initialize
-Status: LOCKED (v1.0.0)
+Status: LOCKED (v1.0.1)
 
 ## 1) Purpose
 Create the singleton `Config` account and lock protocol-wide operational constraints used by all later instructions.
+
+Authoritative constants source: `specs/constants.json`
 
 ## 2) Inputs
 Args:
@@ -15,7 +17,7 @@ Valid ranges:
 - `max_total_pool_per_market > 0`
 - `max_bet_per_user_per_market > 0`
 - `max_bet_per_user_per_market <= max_total_pool_per_market`
-- `1 <= claim_window_secs <= MAX_CLAIM_WINDOW_SECS`
+- `1 <= claim_window_secs <= MAX_CLAIM_WINDOW_SECS` (7,776,000)
 
 ## 3) Accounts
 - `authority: Signer` (initializer + config authority)
