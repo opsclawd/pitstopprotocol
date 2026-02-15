@@ -10,12 +10,13 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "node tests/smoke.spec.js && node tests/canonical.spec.js && node tests/instructions/initialize.spec.js && node tests/instructions/initialize.conformance.spec.js",
+    "test": "node tests/smoke.spec.js && node tests/canonical.spec.js && node tests/instructions/initialize.spec.js && node tests/instructions/initialize.conformance.spec.js && node tests/harness/smoke.spec.js",
     "clean": "turbo clean && git clean -xfd -e node_modules",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "test:initialize": "node tests/instructions/initialize.spec.js",
-    "test:initialize:conformance": "node tests/instructions/initialize.conformance.spec.js"
+    "test:initialize:conformance": "node tests/instructions/initialize.conformance.spec.js",
+    "test:harness": "node tests/harness/smoke.spec.js"
   },
   "devDependencies": {
     "turbo": "^2.5.0",

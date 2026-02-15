@@ -1,0 +1,16 @@
+name: harness-smoke
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  harness-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run harness smoke
+        run: node tests/harness/smoke.spec.js
