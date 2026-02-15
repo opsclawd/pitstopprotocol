@@ -39,6 +39,13 @@ fn validate_add_outcome_preconditions(input: &AddOutcomeInput) -> Result<(), Pit
     if input.outcome_pool_market != input.market {
         return Err(PitStopError::OutcomeMismatch);
     }
+    // Hardening: mirrored scalar fields must match canonical market_state values.
+    if input.market_state.status != input.market_status {
+        return Err(PitStopError::OutcomeMismatch);
+    }
+    if input.market_state.max_outcomes != input.market_max_outcomes {
+        return Err(PitStopError::OutcomeMismatch);
+    }
     // Keep single source-of-truth for market count updates.
     if input.market_state.outcome_count != input.market_outcome_count {
         return Err(PitStopError::OutcomeMismatch);
@@ -147,4 +154,18 @@ mod tests {
         bad.market_state.outcome_count = 2;
         assert_eq!(add_outcome(bad).unwrap_err(), PitStopError::OutcomeMismatch);
     }
+
+    #[test]
+    fn ado_rej_hardening_mirrored_market_fields_must_match() {
+        let mut bad = base_input();
+        bad.market_status = MarketStatus::Seeding;
+        bad.market_state.status = MarketStatus::Open;
+        assert_eq!(add_outcome(bad).unwrap_err(), PitStopError::OutcomeMismatch);
+
+        let mut bad = base_input();
+        bad.market_max_outcomes = 3;
+        bad.market_state.max_outcomes = 4;
+        assert_eq!(add_outcome(bad).unwrap_err(), PitStopError::OutcomeMismatch);
+    }
+
 }
