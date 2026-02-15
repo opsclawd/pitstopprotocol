@@ -1,5 +1,5 @@
 # SPEC_PROTOCOL.md
-Version: v1.0.0
+Version: v1.0.1
 Status: DRAFT (lock after instruction specs + harness are complete)
 
 ## Purpose
@@ -55,3 +55,8 @@ Any protocol change must:
 1) bump version in this file
 2) update invariants/canonical specs
 3) include migration notes and test impact
+
+
+## Sweep semantics (locked)
+- `Swept` is an explicit on-chain market status set by `sweep_remaining`.
+- `sweep_remaining` is non-idempotent; repeat calls fail via lifecycle gate (`MarketNotResolved`).

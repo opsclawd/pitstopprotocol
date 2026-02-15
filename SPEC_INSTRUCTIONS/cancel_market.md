@@ -1,5 +1,5 @@
 # cancel_market
-Version: v1.0.0
+Version: v1.0.1
 Status: LOCKED
 
 ## Purpose
@@ -14,16 +14,17 @@ Recovery path to void dead markets during Seeding before bets exist.
 - market mut
 - vault mut
 - token_program pinned
+- close_destination: SystemAccount (rent recipient on vault close; expected = authority)
 
 ## Preconditions
 - authority == config.authority -> `Unauthorized`
 - market.status == Seeding -> `MarketNotSeeding`
-- now < lock_timestamp -> `TooLateToCancel`
+- now >= lock_timestamp -> `TooLateToCancel`
 - market.total_pool == 0 -> `MarketHasBets`
 - vault.amount == 0 -> `VaultNotEmpty`
 
 ## Effects
-- close vault ATA with market PDA signer seeds
+- close vault ATA with market PDA signer seeds to `close_destination`
 - market.status = Voided
 - set resolution timestamp/hash baseline
 

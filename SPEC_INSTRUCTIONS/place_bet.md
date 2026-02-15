@@ -1,5 +1,5 @@
 # place_bet
-Version: v1.0.0
+Version: v1.0.1
 Status: LOCKED
 
 ## Purpose
@@ -25,9 +25,10 @@ Transfer USDC from user to market vault and record/increment user position + poo
 - market.status == Open -> `MarketNotOpen`
 - now < market.lock_timestamp -> `BettingClosed`
 - outcome_id <= 99 -> `InvalidOutcomeId`
-- market.outcome_count == market.max_outcomes -> `MarketNotReady`
+- market.outcome_count != market.max_outcomes -> `MarketNotReady`
 - amount > 0 -> `ZeroAmount`
 - caps not exceeded -> `MarketCapExceeded` / `UserBetCapExceeded`
+- outcome_id must reference an initialized OutcomePool PDA for this market -> `OutcomeMismatch`
 - outcome pool market/outcome match -> `OutcomeMismatch`
 
 ## Effects

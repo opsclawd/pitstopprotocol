@@ -1,5 +1,5 @@
 # claim_resolved
-Version: v1.0.0
+Version: v1.0.1
 Status: LOCKED
 
 ## Purpose
@@ -19,6 +19,8 @@ Allow users to claim winnings (or mark loser claim as zero payout) after resolut
 - token_program pinned
 
 ## Preconditions
+- Missing position PDA account -> framework account resolution failure (expected)
+
 - market.status == Resolved -> `MarketNotResolved`
 - !position.claimed -> `AlreadyClaimed`
 - now <= resolution_timestamp + claim_window_secs -> `ClaimWindowExpired`

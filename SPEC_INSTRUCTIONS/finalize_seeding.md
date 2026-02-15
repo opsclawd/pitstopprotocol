@@ -1,5 +1,5 @@
 # finalize_seeding
-Version: v1.0.0
+Version: v1.0.1
 Status: LOCKED
 
 ## Purpose
@@ -16,8 +16,8 @@ Transition market from Seeding to Open once all outcomes are seeded.
 ## Preconditions
 - authority == config.authority -> `Unauthorized`
 - market.status == Seeding -> `MarketNotSeeding`
-- market.outcome_count == market.max_outcomes -> `SeedingIncomplete`
-- now < lock_timestamp -> `TooLateToOpen`
+- market.outcome_count != market.max_outcomes -> `SeedingIncomplete`
+- now >= lock_timestamp -> `TooLateToOpen`
 
 ## Effects
 - market.status = Open

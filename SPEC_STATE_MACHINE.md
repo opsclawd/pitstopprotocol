@@ -1,5 +1,5 @@
 # SPEC_STATE_MACHINE.md
-Version: v1.0.0
+Version: v1.0.1
 Status: DRAFT
 
 ## Market States
@@ -8,7 +8,7 @@ Status: DRAFT
 - Locked
 - Resolved
 - Voided
-- Swept (accounting terminal state after sweep action)
+- Swept (explicit on-chain terminal state after sweep action)
 
 ## Allowed transitions
 - create_market => Seeding

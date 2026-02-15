@@ -1,5 +1,5 @@
 # claim_voided
-Version: v1.0.0
+Version: v1.0.1
 Status: LOCKED
 
 ## Purpose
@@ -18,6 +18,8 @@ Refund full stake for positions in a voided market within claim window.
 - token_program pinned
 
 ## Preconditions
+- Missing position PDA account -> framework account resolution failure (expected)
+
 - market.status == Voided -> `MarketNotVoided`
 - !position.claimed -> `AlreadyClaimed`
 - now <= resolution_timestamp + claim_window_secs -> `ClaimWindowExpired`
