@@ -1,9 +1,0 @@
-{
-  "extends": "../../configs/tsconfig.base.json",
-  "compilerOptions": {
-    "jsx": "preserve",
-    "noEmit": true,
-    "lib": ["dom", "dom.iterable", "es2022"]
-  },
-  "include": ["next-env.d.ts", "src"]
-}
