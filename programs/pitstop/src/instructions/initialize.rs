@@ -168,4 +168,16 @@ mod tests {
         bad.claim_window_secs = MAX_CLAIM_WINDOW_SECS + 1;
         assert_eq!(initialize(bad).unwrap_err(), PitStopError::InvalidClaimWindow);
     }
+
+    #[test]
+    fn init_claim_window_inclusive_bounds() {
+        let mut low = base_input();
+        low.claim_window_secs = 1;
+        assert!(initialize(low).is_ok());
+
+        let mut high = base_input();
+        high.claim_window_secs = MAX_CLAIM_WINDOW_SECS;
+        assert!(initialize(high).is_ok());
+    }
+
 }
