@@ -1,9 +1,9 @@
 # sweep_remaining
-Version: v1.0.2
+Version: v1.0.3
 Status: LOCKED
 
 ## Purpose
-After claim window expires, transfer remaining vault balance to treasury.
+After claim window expires, transfer remaining vault balance to treasury and close vault ATA.
 
 ## Inputs
 - none
@@ -15,6 +15,7 @@ After claim window expires, transfer remaining vault balance to treasury.
 - vault mut
 - treasury mut (must equal config.treasury)
 - token_program pinned
+- close_destination: SystemAccount (rent recipient on vault close; expected = authority or treasury authority)
 
 ## Preconditions
 - authority == config.authority -> `Unauthorized`
@@ -24,6 +25,7 @@ After claim window expires, transfer remaining vault balance to treasury.
 
 ## Effects
 - transfer full vault.amount -> treasury
+- close vault ATA using market PDA signer seeds
 - market.status = Swept (explicit on-chain terminal status)
 
 ## Events
@@ -39,9 +41,9 @@ After claim window expires, transfer remaining vault balance to treasury.
 
 ## Postconditions
 - `market.status == Swept`
-- `vault.amount == 0`
-- subsequent sweep attempts fail lifecycle gate
+- vault account no longer exists
+- subsequent sweep attempts fail lifecycle gate/account constraints
 
 
 ## Vault handling
-- Vault is NOT closed in sweep path (remains open with zero balance).
+- Vault is closed in sweep path to prevent grief-deposits after terminal settlement.

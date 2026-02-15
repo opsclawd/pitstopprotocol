@@ -1,5 +1,5 @@
 # SPEC_STATE_MACHINE.md
-Version: v1.0.2
+Version: v1.0.3
 Status: DRAFT
 
 ## Market States
@@ -32,3 +32,7 @@ Status: DRAFT
 - Swept is terminal and non-reversible.
 - No mutating instruction is valid in Swept (claims, sweep, lock, resolve, void, cancel, add outcomes, finalize, place bet).
 - Read-only queries remain allowed.
+
+
+## Swept storage semantics
+- Swept implies vault has been transferred and closed.

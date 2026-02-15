@@ -1,5 +1,5 @@
 # SPEC_EVENTS.md
-Version: v1.0.0
+Version: v1.0.1
 Status: DRAFT
 
 Event contract for indexing/API surfaces.
@@ -14,9 +14,10 @@ Event contract for indexing/API surfaces.
 - MarketVoided { market, payload_hash, timestamp }
 - BetPlaced { market, user, outcome_id, amount, timestamp }
 - Claimed { market, user, outcome_id, payout, timestamp }
-- Swept { market, amount, treasury, timestamp }
+- MarketSweptEvent { market, amount, to_treasury, timestamp }
 - MarketCancelled { market, timestamp }
 
 ## Must-emit rules
 - Lifecycle transitions must emit corresponding lifecycle event.
 - Token-moving instructions must emit amount-bearing events.
+- `sweep_remaining` must emit `MarketSweptEvent` exactly once in normal lifecycle flow (single-shot).

@@ -1,5 +1,5 @@
 # place_bet
-Version: v1.0.2
+Version: v1.0.3
 Status: LOCKED
 
 ## Purpose
@@ -28,8 +28,8 @@ Transfer USDC from user to market vault and record/increment user position + poo
 - market.outcome_count != market.max_outcomes -> `MarketNotReady`
 - amount > 0 -> `ZeroAmount`
 - caps not exceeded -> `MarketCapExceeded` / `UserBetCapExceeded`
-- outcome_id must reference an initialized OutcomePool PDA for this market -> `OutcomeMismatch (including missing or mismatched OutcomePool PDA)`
-- outcome pool market/outcome match -> `OutcomeMismatch (including missing or mismatched OutcomePool PDA)`
+- outcome_id must reference an initialized OutcomePool PDA for this market -> `OutcomeMismatch (covers both: wrong PDA passed, and PDA not initialized/missing)`
+- outcome pool market/outcome match -> `OutcomeMismatch (covers both: wrong PDA passed, and PDA not initialized/missing)`
 
 ## Effects
 - token transfer user_usdc -> vault by `amount`
@@ -46,3 +46,7 @@ Transfer USDC from user to market vault and record/increment user position + poo
 
 ## Required tests
 - PBT-HP-001..002, PBT-REJ-001..010, PBT-INV-001..002, PBT-ADV-001..004
+
+
+## Outcome existence test requirement
+- Tests must include both cases: wrong PDA and missing/uninitialized PDA, each mapping to `OutcomeMismatch`.
