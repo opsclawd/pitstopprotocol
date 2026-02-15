@@ -1,1 +1,9 @@
-// Error taxonomy skeleton; mapped in SPEC_ERRORS.md.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PitStopError {
+    InvalidTokenProgram,
+    InvalidMintDecimals,
+    InvalidTreasuryMint,
+    InvalidTreasuryOwner,
+    InvalidCap,
+    InvalidClaimWindow,
+}

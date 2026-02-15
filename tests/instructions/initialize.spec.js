@@ -1,26 +1,10 @@
 const assert = require('assert');
-
 const constants = require('../../specs/constants.json');
-const REQUIRED_TOKEN_PROGRAM = constants.REQUIRED_TOKEN_PROGRAM;
-const MAX_CLAIM_WINDOW_SECS = constants.MAX_CLAIM_WINDOW_SECS;
-
-function validateInitialize(input) {
-  if (input.tokenProgram !== REQUIRED_TOKEN_PROGRAM) return 'InvalidTokenProgram';
-  if (input.usdcDecimals !== constants.USDC_DECIMALS) return 'InvalidMintDecimals';
-  if (input.treasuryMint !== input.usdcMint) return 'InvalidTreasuryMint';
-  if (input.treasuryOwner !== input.treasuryAuthority) return 'InvalidTreasuryOwner';
-  if (
-    input.maxTotal <= 0 ||
-    input.maxPerUser <= 0 ||
-    input.maxPerUser > input.maxTotal
-  ) return 'InvalidCap';
-  if (input.claimWindowSecs < 1 || input.claimWindowSecs > MAX_CLAIM_WINDOW_SECS) return 'InvalidClaimWindow';
-  return null;
-}
+const { validateInitializeInput } = require('../../packages/core/src/initialize_instruction.cjs');
 
 (function run() {
   const base = {
-    tokenProgram: REQUIRED_TOKEN_PROGRAM,
+    tokenProgram: constants.REQUIRED_TOKEN_PROGRAM,
     usdcDecimals: 6,
     usdcMint: 'MintA',
     treasuryMint: 'MintA',
@@ -31,15 +15,15 @@ function validateInitialize(input) {
     claimWindowSecs: 3600,
   };
 
-  assert.equal(validateInitialize(base), null);
-  assert.equal(validateInitialize({ ...base, tokenProgram: 'TokenzFake' }), 'InvalidTokenProgram');
-  assert.equal(validateInitialize({ ...base, usdcDecimals: 9 }), 'InvalidMintDecimals');
-  assert.equal(validateInitialize({ ...base, treasuryMint: 'MintB' }), 'InvalidTreasuryMint');
-  assert.equal(validateInitialize({ ...base, treasuryOwner: 'OtherOwner' }), 'InvalidTreasuryOwner');
-  assert.equal(validateInitialize({ ...base, maxPerUser: 2_000_000 }), 'InvalidCap');
-  assert.equal(validateInitialize({ ...base, maxTotal: 0 }), 'InvalidCap');
-  assert.equal(validateInitialize({ ...base, claimWindowSecs: 0 }), 'InvalidClaimWindow');
-  assert.equal(validateInitialize({ ...base, claimWindowSecs: MAX_CLAIM_WINDOW_SECS + 1 }), 'InvalidClaimWindow');
+  assert.equal(validateInitializeInput(base), null);
+  assert.equal(validateInitializeInput({ ...base, tokenProgram: 'TokenzFake' }), 'InvalidTokenProgram');
+  assert.equal(validateInitializeInput({ ...base, usdcDecimals: 9 }), 'InvalidMintDecimals');
+  assert.equal(validateInitializeInput({ ...base, treasuryMint: 'MintB' }), 'InvalidTreasuryMint');
+  assert.equal(validateInitializeInput({ ...base, treasuryOwner: 'OtherOwner' }), 'InvalidTreasuryOwner');
+  assert.equal(validateInitializeInput({ ...base, maxPerUser: 2_000_000 }), 'InvalidCap');
+  assert.equal(validateInitializeInput({ ...base, maxTotal: 0 }), 'InvalidCap');
+  assert.equal(validateInitializeInput({ ...base, claimWindowSecs: 0 }), 'InvalidClaimWindow');
+  assert.equal(validateInitializeInput({ ...base, claimWindowSecs: constants.MAX_CLAIM_WINDOW_SECS + 1 }), 'InvalidClaimWindow');
 
   console.log('initialize spec tests ok');
 })();
