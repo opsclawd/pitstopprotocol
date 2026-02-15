@@ -6,6 +6,7 @@ use crate::{
     state::{Market, MarketStatus},
 };
 
+/// Accounts required to create a market PDA.
 #[derive(Accounts)]
 #[instruction(race_id_hash: [u8; 32])]
 pub struct CreateMarket<'info> {
@@ -24,6 +25,9 @@ pub struct CreateMarket<'info> {
     pub system_program: Program<'info, System>,
 }
 
+/// create_market initializes a fresh Market account with validated configuration.
+///
+/// Validation is intentionally strict to fail early with explicit error codes.
 pub fn create_market(
     ctx: Context<CreateMarket>,
     race_id_hash: [u8; 32],
@@ -39,6 +43,7 @@ pub fn create_market(
     require!(close_ts > open_ts, PitStopError::InvalidMarketTimes);
     require!(fee_bps <= BPS_DENOMINATOR, PitStopError::InvalidFeeBps);
 
+        // Populate market with deterministic defaults so later instructions can rely on invariants.
     let market = &mut ctx.accounts.market;
     market.authority = ctx.accounts.authority.key();
     market.race_id_hash = race_id_hash;

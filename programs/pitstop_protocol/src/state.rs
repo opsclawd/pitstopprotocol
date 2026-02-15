@@ -9,6 +9,7 @@ pub enum MarketStatus {
     Cancelled = 2,
 }
 
+/// Market stores the on-chain state for one `(authority, race_id_hash)` market.
 #[account]
 pub struct Market {
     pub authority: Pubkey,
@@ -20,12 +21,15 @@ pub struct Market {
     pub driver_count: u8,
     pub fee_bps: u16,
     pub total_pool_lamports: u64,
+        /// Fixed-size pools (lamports) per driver index. Unused trailing entries remain 0.
     pub driver_pools_lamports: [u64; MAX_DRIVERS],
     pub winner_pool_lamports: u64,
     pub bump: u8,
 }
 
 impl Market {
+    /// Byte size used when initializing the Market account.
+    /// Keep this in sync with field changes to avoid account allocation bugs.
     pub const INIT_SPACE: usize = 8  // discriminator
         + 32 // authority
         + 32 // race_id_hash
@@ -41,6 +45,7 @@ impl Market {
         + 1; // bump
 }
 
+/// Position tracks a user's additive bet on a market (single driver in MVP).
 #[account]
 pub struct Position {
     pub user: Pubkey,
