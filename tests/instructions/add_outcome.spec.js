@@ -17,6 +17,8 @@ const { validateAddOutcomeInput } = require('../../packages/core/src/add_outcome
   assert.equal(validateAddOutcomeInput({ ...base, authority: 'Other' }), 'Unauthorized');
   assert.equal(validateAddOutcomeInput({ ...base, marketStatus: 'Open' }), 'MarketNotSeeding');
   assert.equal(validateAddOutcomeInput({ ...base, outcomeId: 100 }), 'InvalidOutcomeId');
+  assert.equal(validateAddOutcomeInput({ ...base, outcomeId: -1 }), 'InvalidOutcomeId');
+  assert.equal(validateAddOutcomeInput({ ...base, outcomeId: 1.5 }), 'InvalidOutcomeId');
   assert.equal(validateAddOutcomeInput({ ...base, marketOutcomeCount: 3 }), 'MaxOutcomesReached');
   assert.equal(validateAddOutcomeInput({ ...base, outcomePoolMarket: 'OtherMarket' }), 'OutcomeMismatch');
 

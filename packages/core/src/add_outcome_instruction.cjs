@@ -17,9 +17,14 @@ function executeAddOutcome(input) {
   const err = validateAddOutcomeInput(input);
   if (err) return { ok: false, error: err };
 
+  // Keep a single source of truth for count updates to avoid drift.
+  if (input.marketState && input.marketState.outcomeCount !== input.marketOutcomeCount) {
+    return { ok: false, error: 'OutcomeMismatch' };
+  }
+
   const updatedMarket = {
     ...input.marketState,
-    outcomeCount: input.marketOutcomeCount + 1,
+    outcomeCount: input.marketState.outcomeCount + 1,
   };
 
   const outcomePool = {

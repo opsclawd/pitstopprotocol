@@ -39,8 +39,11 @@ const { invokeAddOutcomeOnProgram } = require('../harness/add_outcome_adapter');
     [{ authority: 'Other' }, 'Unauthorized'],
     [{ marketStatus: 'Open' }, 'MarketNotSeeding'],
     [{ outcomeId: 100 }, 'InvalidOutcomeId'],
+    [{ outcomeId: -1 }, 'InvalidOutcomeId'],
+    [{ outcomeId: 1.5 }, 'InvalidOutcomeId'],
     [{ marketOutcomeCount: 3 }, 'MaxOutcomesReached'],
     [{ outcomePoolMarket: 'OtherMarket' }, 'OutcomeMismatch'],
+    [{ marketState: { ...base.marketState, outcomeCount: 2 } }, 'OutcomeMismatch'],
   ];
 
   for (const [patch, expected] of cases) {
