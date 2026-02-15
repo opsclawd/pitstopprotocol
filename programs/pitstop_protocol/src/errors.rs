@@ -11,6 +11,8 @@ pub enum PitStopError {
 
     #[msg("Market is not open for betting.")]
     MarketNotOpen,
+    #[msg("Betting has not started for this market.")]
+    BettingNotStarted,
     #[msg("Betting is closed for this market.")]
     BettingClosed,
     #[msg("Invalid driver index for this market.")]
@@ -21,5 +23,9 @@ pub enum PitStopError {
     BetTooSmall,
     #[msg("Math overflow while updating totals.")]
     MathOverflow,
+    #[msg("Position account invariants failed.")]
+    PositionInvariantViolation,
+    #[msg("Invalid market configuration.")]
+    InvalidMarketConfig,
 
 }

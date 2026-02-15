@@ -63,4 +63,7 @@ Implement `place_bet` so users can place multiple bets in the same market **for 
 - Overflow paths return `MathOverflow`.
 
 ## As-built notes
-- Pending implementation.
+- Added open window guard (`now >= open_ts`) in addition to close guard.
+- Added defense-in-depth position invariant checks (`position.user`, `position.market`).
+- Added market config sanity check (`driver_count <= MAX_DRIVERS`) during betting.
+- Migration note: `init_if_needed` assumes fresh deployment for `Position` layout; if legacy smaller Position accounts exist, migration/realloc strategy is required.

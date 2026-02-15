@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program::{self, Transfer};
 
 use crate::{
-    constants::MIN_BET_LAMPORTS,
+    constants::{MAX_DRIVERS, MIN_BET_LAMPORTS},
     errors::PitStopError,
     state::{Market, MarketStatus, Position},
 };
@@ -44,7 +44,15 @@ pub fn place_bet(ctx: Context<PlaceBet>, driver_index: u8, amount_lamports: u64)
     // Guard rails for bet amount and market lifecycle.
     require!(amount_lamports >= MIN_BET_LAMPORTS, PitStopError::BetTooSmall);
     require!(market.status == MarketStatus::Open as u8, PitStopError::MarketNotOpen);
+    // Enforce full betting window: [open_ts, close_ts).
+    require!(now_ts >= market.open_ts, PitStopError::BettingNotStarted);
     require!(now_ts < market.close_ts, PitStopError::BettingClosed);
+
+    // Defense-in-depth: market config must stay internally sane.
+    require!(
+        (market.driver_count as usize) <= MAX_DRIVERS,
+        PitStopError::InvalidMarketConfig
+    );
     require!(driver_index < market.driver_count, PitStopError::InvalidDriverIndex);
 
     // Initialize position metadata on first interaction.
@@ -55,6 +63,12 @@ pub fn place_bet(ctx: Context<PlaceBet>, driver_index: u8, amount_lamports: u64)
         position.claimed = false;
         position.bump = ctx.bumps.position;
     }
+
+    // Defense-in-depth: for existing positions, stored metadata must match PDA identity.
+    require!(
+        position.user == ctx.accounts.bettor.key() && position.market == market.key(),
+        PitStopError::PositionInvariantViolation
+    );
 
     // Enforce add-to-position-only behavior for MVP.
     require!(
