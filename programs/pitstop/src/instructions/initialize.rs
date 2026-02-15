@@ -114,8 +114,13 @@ mod tests {
         assert_eq!(cfg.oracle, "AuthA");
         assert_eq!(cfg.usdc_mint, "MintA");
         assert_eq!(cfg.treasury, "TreasuryA");
+        assert_eq!(cfg.treasury_authority, "TreasuryOwnerA");
         assert_eq!(cfg.fee_bps, 0);
         assert!(!cfg.paused);
+        assert_eq!(cfg.max_total_pool_per_market, 1_000_000);
+        assert_eq!(cfg.max_bet_per_user_per_market, 100_000);
+        assert_eq!(cfg.claim_window_secs, 3600);
+        assert_eq!(cfg.token_program, REQUIRED_TOKEN_PROGRAM);
 
         assert_eq!(evt.authority, "AuthA");
         assert_eq!(evt.oracle, "AuthA");
@@ -144,8 +149,20 @@ mod tests {
         assert_eq!(initialize(bad).unwrap_err(), PitStopError::InvalidTreasuryOwner);
 
         let mut bad = base_input();
+        bad.max_total_pool_per_market = 0;
+        assert_eq!(initialize(bad).unwrap_err(), PitStopError::InvalidCap);
+
+        let mut bad = base_input();
+        bad.max_bet_per_user_per_market = 0;
+        assert_eq!(initialize(bad).unwrap_err(), PitStopError::InvalidCap);
+
+        let mut bad = base_input();
         bad.max_bet_per_user_per_market = 2_000_000;
         assert_eq!(initialize(bad).unwrap_err(), PitStopError::InvalidCap);
+
+        let mut bad = base_input();
+        bad.claim_window_secs = 0;
+        assert_eq!(initialize(bad).unwrap_err(), PitStopError::InvalidClaimWindow);
 
         let mut bad = base_input();
         bad.claim_window_secs = MAX_CLAIM_WINDOW_SECS + 1;
