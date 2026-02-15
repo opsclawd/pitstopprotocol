@@ -27,3 +27,9 @@ pub struct OutcomeAdded {
     pub outcome_count: u8,
     pub timestamp: i64,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MarketOpened {
+    pub market: String,
+    pub timestamp: i64,
+}
