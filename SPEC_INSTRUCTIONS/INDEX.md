@@ -1,6 +1,6 @@
 # SPEC_INSTRUCTIONS/INDEX.md
-Version: v1.0.5
-Status: DRAFT (inventory locked; per-instruction status varies)
+Version: v1.0.6
+Status: LOCKED
 
 Authoritative instruction inventory for MVP (count: 12).
 
@@ -15,7 +15,7 @@ Authoritative instruction inventory for MVP (count: 12).
 | 7 | resolve_market | LOCKED | N | Y | Locked->Resolved | integration + adversarial |
 | 8 | void_market | LOCKED | N | Y | Locked->Voided | integration |
 | 9 | claim_resolved | LOCKED | Y | Y | N | integration + invariant |
-|10 | claim_voided | Draft | Y | Y | N | integration + invariant |
+|10 | claim_voided | LOCKED | Y | Y | N | integration + invariant |
 |11 | sweep_remaining | LOCKED | Y | Y | Resolved/Voided->Swept (terminal accounting) | integration + adversarial |
 |12 | cancel_market | LOCKED | Y | Y | Seeding->Voided | integration + adversarial |
 

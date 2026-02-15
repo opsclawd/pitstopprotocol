@@ -1,10 +1,10 @@
 # SPEC_STATE_SCHEMA.md
-Version: v1.0.0
-Status: DRAFT
+Version: v1.0.1
+Status: LOCKED
 
 Defines canonical account schemas and field semantics for Config/Market/OutcomePool/Position.
 
-## Config (draft)
+## Config
 - authority: Pubkey
 - oracle: Pubkey
 - usdc_mint: Pubkey
@@ -17,7 +17,7 @@ Defines canonical account schemas and field semantics for Config/Market/OutcomeP
 - claim_window_secs: i64
 - token_program: Pubkey
 
-## Market (draft)
+## Market
 - market_id: [u8;32]
 - event_id: [u8;32]
 - lock_timestamp: i64
@@ -32,12 +32,12 @@ Defines canonical account schemas and field semantics for Config/Market/OutcomeP
 - market_type: enum
 - rules_version: u16
 
-## OutcomePool (draft)
+## OutcomePool
 - market: Pubkey
 - outcome_id: u8
 - pool_amount: u64
 
-## Position (draft)
+## Position
 - market: Pubkey
 - user: Pubkey
 - outcome_id: u8

@@ -1,6 +1,6 @@
 # SPEC_ACCOUNTS.md
-Version: v1.0.1
-Status: DRAFT
+Version: v1.0.2
+Status: LOCKED
 
 Canonical account layout contract.
 

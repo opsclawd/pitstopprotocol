@@ -1,6 +1,6 @@
 # SPEC_CANONICAL.md
-Version: v1.0.0
-Status: DRAFT
+Version: v1.0.1
+Status: LOCKED
 
 ## Canonical descriptor encoding
 - UTF-8 JSON

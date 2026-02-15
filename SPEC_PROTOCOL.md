@@ -1,6 +1,6 @@
 # SPEC_PROTOCOL.md
-Version: v1.0.3
-Status: DRAFT (lock after instruction specs + harness are complete)
+Version: v1.0.4
+Status: LOCKED
 
 ## Purpose
 Single source of truth for PitStop protocol behavior.
