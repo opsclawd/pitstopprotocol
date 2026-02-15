@@ -16,3 +16,13 @@ This harness defines deterministic test contracts before protocol instruction im
 
 ## Next step
 PR #58 wires canonical + math unit tests into this harness and adds golden-vector assertions.
+
+
+## Determinism controls
+- Set `HARNESS_NOW_SECS` to freeze `now` in harness helpers.
+- `unixNowSeconds({nowSeconds})` overrides wall-clock for deterministic tests.
+- Provider exposes `deterministicSeed` for repeatable fixture derivations.
+
+## Fixture interface
+- `usdcFixtureSpec()` returns locked fixture contract shape.
+- `getOrCreateUsdcMint(adapter)` delegates mint creation to adapter in #58/#59 while preserving interface stability.

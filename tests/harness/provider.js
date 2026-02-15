@@ -1,9 +1,12 @@
 /**
- * Harness provider abstraction.
+ * Harness provider abstraction (locked interface for #58/#59).
  *
- * This intentionally does not hard-bind to Anchor runtime yet.
- * PR #57 defines the interface and deterministic fixtures contract,
- * PR #58+ will wire this to concrete validator/program clients.
+ * Returned object contract:
+ * - rpcUrl: string
+ * - wsUrl: string
+ * - commitment: string
+ * - deterministicSeed: string
+ * - getConnection(): { rpcUrl, wsUrl, commitment } (adapter placeholder)
  */
 const { HarnessConfig } = require('./config');
 
@@ -12,6 +15,14 @@ function getHarnessProvider() {
     rpcUrl: HarnessConfig.rpcUrl,
     wsUrl: HarnessConfig.wsUrl,
     commitment: HarnessConfig.commitment,
+    deterministicSeed: HarnessConfig.deterministicSeed,
+    getConnection() {
+      return {
+        rpcUrl: HarnessConfig.rpcUrl,
+        wsUrl: HarnessConfig.wsUrl,
+        commitment: HarnessConfig.commitment,
+      };
+    },
   };
 }
 

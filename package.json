@@ -16,7 +16,8 @@
     "format:check": "prettier . --check",
     "test:initialize": "node tests/instructions/initialize.spec.js",
     "test:initialize:conformance": "node tests/instructions/initialize.conformance.spec.js",
-    "test:harness": "node tests/harness/smoke.spec.js"
+    "test:harness": "node tests/harness/smoke.spec.js",
+    "test:harness:deterministic": "HARNESS_NOW_SECS=1800000000 node tests/harness/smoke.spec.js"
   },
   "devDependencies": {
     "turbo": "^2.5.0",
