@@ -1,6 +1,6 @@
 # SPEC_STATE_MACHINE.md
-Version: v1.0.3
-Status: DRAFT
+Version: v1.0.4
+Status: LOCKED
 
 ## Market States
 - Seeding

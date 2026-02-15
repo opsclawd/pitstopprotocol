@@ -1,5 +1,5 @@
 # create_market
-Version: v1.0.1
+Version: v1.0.2
 Status: LOCKED
 
 ## 1) Purpose

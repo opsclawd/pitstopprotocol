@@ -1,5 +1,5 @@
 # sweep_remaining
-Version: v1.0.4
+Version: v1.0.6
 Status: LOCKED
 
 ## Purpose
@@ -29,7 +29,7 @@ After claim window expires, transfer remaining vault balance to treasury and clo
 - market.status = Swept (explicit on-chain terminal status)
 
 ## Events
-- `Swept`
+- `MarketSweptEvent`
 
 ## Required tests
 - SWP-HP-001, SWP-REJ-001..004, SWP-ADV-001

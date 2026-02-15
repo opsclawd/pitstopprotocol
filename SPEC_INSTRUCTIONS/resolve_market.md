@@ -1,5 +1,5 @@
 # resolve_market
-Version: v1.0.3
+Version: v1.0.4
 Status: LOCKED
 
 ## Purpose

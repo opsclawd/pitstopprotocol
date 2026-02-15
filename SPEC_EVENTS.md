@@ -1,5 +1,5 @@
 # SPEC_EVENTS.md
-Version: v1.2.0
+Version: v1.2.1
 Status: LOCKED
 
 Event contract for indexing/API surfaces.
@@ -37,7 +37,7 @@ Event contract for indexing/API surfaces.
 ## Determinism requirements
 - All amount fields are in base token units (USDC 6 decimals).
 - Event timestamp fields must use on-chain clock (`Clock::get()?.unix_timestamp`).
-- Lifecycle events must align exactly with state transitions in `SPEC_STATE_MACHINE.md`.
+- Lifecycle events align exactly with `SPEC_STATE_MACHINE.md` (LOCKED v1.0.4).
 
 ## Error/event interaction
 - No event must be emitted on failed instructions.
@@ -48,3 +48,9 @@ Event contract for indexing/API surfaces.
 - EVT-MTX-002: failed instruction emits no event.
 - EVT-MTX-003: event payload fields match post-state values.
 - EVT-MTX-004: lifecycle events match allowed transitions only.
+
+
+## Cancel vs void distinction (locked)
+- `void_market` emits `MarketVoided` (Locked->Voided).
+- `cancel_market` emits `MarketCancelled` only (Seeding->Voided recovery path).
+- Indexers must treat both as Voided status transitions but different operational causes.
