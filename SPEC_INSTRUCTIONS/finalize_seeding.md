@@ -1,17 +1,35 @@
 # finalize_seeding
-Status: Draft v1.0.0
+Version: v1.0.0
+Status: LOCKED
+
+## Purpose
+Transition market from Seeding to Open once all outcomes are seeded.
 
 ## Inputs
-- TODO
+- none
+
+## Accounts
+- market mut
+- authority signer
+- config (authority check)
 
 ## Preconditions
-- TODO
+- authority == config.authority -> `Unauthorized`
+- market.status == Seeding -> `MarketNotSeeding`
+- market.outcome_count == market.max_outcomes -> `SeedingIncomplete`
+- now < lock_timestamp -> `TooLateToOpen`
 
 ## Effects
-- TODO
+- market.status = Open
 
-## Failure modes
-- TODO
+## Token effects
+- none
+
+## Events
+- `MarketOpened`
 
 ## Postconditions
-- TODO
+- market may accept bets until lock timestamp.
+
+## Required tests
+- FSE-HP-001, FSE-REJ-001..004

@@ -1,17 +1,33 @@
 # sweep_remaining
-Status: Draft v1.0.0
+Version: v1.0.0
+Status: LOCKED
+
+## Purpose
+After claim window expires, transfer remaining vault balance to treasury.
 
 ## Inputs
-- TODO
+- none
+
+## Accounts
+- authority signer
+- config (authority check)
+- market
+- vault mut
+- treasury mut (must equal config.treasury)
+- token_program pinned
 
 ## Preconditions
-- TODO
+- authority == config.authority -> `Unauthorized`
+- market.status in {Resolved, Voided} -> `MarketNotResolved`/`MarketNotVoided`
+- now > resolution_timestamp + claim_window_secs -> `ClaimWindowNotExpired`
+- treasury constraints valid (mint+owner) -> `InvalidTreasuryMint`/`InvalidTreasuryOwner`
 
 ## Effects
-- TODO
+- transfer full vault.amount -> treasury
+- logical lifecycle terminal accounting state reached
 
-## Failure modes
-- TODO
+## Events
+- `Swept`
 
-## Postconditions
-- TODO
+## Required tests
+- SWP-HP-001, SWP-REJ-001..004, SWP-ADV-001

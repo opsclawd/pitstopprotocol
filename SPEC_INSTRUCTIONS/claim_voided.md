@@ -1,17 +1,33 @@
 # claim_voided
-Status: Draft v1.0.0
+Version: v1.0.0
+Status: LOCKED
+
+## Purpose
+Refund full stake for positions in a voided market within claim window.
 
 ## Inputs
-- TODO
+- `outcome_id: u8`
+
+## Accounts
+- user signer
+- config
+- market
+- position mut
+- user_usdc mut
+- vault mut
+- token_program pinned
 
 ## Preconditions
-- TODO
+- market.status == Voided -> `MarketNotVoided`
+- !position.claimed -> `AlreadyClaimed`
+- now <= resolution_timestamp + claim_window_secs -> `ClaimWindowExpired`
 
 ## Effects
-- TODO
+- transfer payout=position.amount from vault -> user_usdc
+- mark claimed and set payout
 
-## Failure modes
-- TODO
+## Events
+- `Claimed`
 
-## Postconditions
-- TODO
+## Required tests
+- CLV-HP-001, CLV-REJ-001..003, CLV-INV-001
