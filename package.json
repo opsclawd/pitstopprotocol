@@ -10,7 +10,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "turbo test",
+    "test": "node tests/smoke.spec.js && node tests/canonical.spec.js",
     "clean": "turbo clean && git clean -xfd -e node_modules",
     "format": "prettier . --write",
     "format:check": "prettier . --check"

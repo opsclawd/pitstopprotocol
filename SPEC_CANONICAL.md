@@ -17,3 +17,14 @@ Version: v1.0.0
 ## Timestamps
 - Unix seconds only.
 - Reject obvious milliseconds in clients/operators.
+
+
+## Encoding format (draft)
+- Descriptor encoded as UTF-8 JSON with sorted keys and no extra whitespace.
+- market_id input bytes: event_id(32) || market_type_byte(1) || rules_version_le_u16(2).
+
+## Test vectors
+1) descriptor={"sport":"f1","season":"2026","round":"05","session":"race"}
+   - expected_event_id: TBD
+2) event_id=<vector1>, market_type=0, rules_version=1
+   - expected_market_id: TBD
