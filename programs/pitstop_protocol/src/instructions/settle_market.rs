@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::{
+    constants::MAX_DRIVERS,
     errors::PitStopError,
     state::{Market, MarketStatus},
 };
@@ -14,6 +15,7 @@ pub struct SettleMarket<'info> {
     /// Market PDA to finalize.
     #[account(
         mut,
+        has_one = authority,
         seeds = [b"market", market.authority.as_ref(), market.race_id_hash.as_ref()],
         bump = market.bump
     )]

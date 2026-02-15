@@ -50,3 +50,5 @@ If winner pool is zero, settlement still succeeds. Claim logic (Issue #5) will t
 
 ## As-built notes
 - Implemented in `programs/pitstop_protocol/src/instructions/settle_market.rs`.
+- Added Anchor `has_one = authority` constraint for clearer authorization semantics.
+- Added defense-in-depth `driver_count <= MAX_DRIVERS` sanity check before array indexing.
