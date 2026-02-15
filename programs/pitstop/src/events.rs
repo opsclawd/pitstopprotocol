@@ -19,3 +19,11 @@ pub struct MarketCreated {
     pub rules_version: u16,
     pub timestamp: i64,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OutcomeAdded {
+    pub market: String,
+    pub outcome_id: u8,
+    pub outcome_count: u8,
+    pub timestamp: i64,
+}
