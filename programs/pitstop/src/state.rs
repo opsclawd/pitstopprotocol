@@ -39,3 +39,10 @@ pub struct Market {
     pub market_type: u8,
     pub rules_version: u16,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OutcomePool {
+    pub market: String,
+    pub outcome_id: u8,
+    pub pool_amount: u64,
+}

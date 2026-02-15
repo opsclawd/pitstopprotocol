@@ -13,4 +13,8 @@ pub enum PitStopError {
     UnsupportedMarketType,
     UnsupportedRulesVersion,
     InvalidMarketId,
+    MarketNotSeeding,
+    InvalidOutcomeId,
+    MaxOutcomesReached,
+    OutcomeMismatch,
 }
