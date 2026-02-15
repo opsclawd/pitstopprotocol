@@ -35,4 +35,14 @@ pub mod pitstop_protocol {
             fee_bps,
         )
     }
+
+    /// Place a wager on a driver and aggregate stake in the bettor position.
+    pub fn place_bet(
+        ctx: Context<PlaceBet>,
+        driver_index: u8,
+        amount_lamports: u64,
+    ) -> Result<()> {
+        instructions::place_bet(ctx, driver_index, amount_lamports)
+    }
+
 }
