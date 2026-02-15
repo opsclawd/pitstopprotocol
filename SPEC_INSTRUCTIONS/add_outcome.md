@@ -1,5 +1,5 @@
 # add_outcome
-Version: v1.0.0
+Version: v1.0.1
 Status: LOCKED
 
 ## Purpose
@@ -17,9 +17,9 @@ Add one outcome pool to a seeding market.
 
 ## Preconditions
 - authority == config.authority -> `Unauthorized`
-- market.status == Seeding -> `MarketNotSeeding`
+- market.status != Seeding -> `MarketNotSeeding`
 - outcome_id <= 99 -> `InvalidOutcomeId`
-- market.outcome_count < market.max_outcomes -> `MaxOutcomesReached`
+- market.outcome_count >= market.max_outcomes -> `MaxOutcomesReached`
 
 ## Effects
 - create outcome_pool with pool_amount=0

@@ -1,5 +1,5 @@
 # SPEC_INSTRUCTIONS/INDEX.md
-Version: v1.0.3
+Version: v1.0.4
 Status: DRAFT (inventory locked; per-instruction status varies)
 
 Authoritative instruction inventory for MVP (count: 12).

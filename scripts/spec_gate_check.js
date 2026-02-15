@@ -43,3 +43,9 @@ for (const p of lockedSpecPaths) {
 }
 
 console.log('spec gate check ok');
+
+{
+  const txt = fs.readFileSync("SPEC_ERRORS.md","utf8");
+  if (!/Status:\s*LOCKED/i.test(txt)) fail("SPEC_ERRORS.md must be LOCKED");
+  if (!/## Instruction mapping/i.test(txt)) fail("SPEC_ERRORS.md missing instruction mapping section");
+}
