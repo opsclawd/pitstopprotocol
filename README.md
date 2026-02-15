@@ -1,55 +1,36 @@
 # PitStop Protocol
 
-Solana-based **parimutuel prediction markets** for motorsports — starting with an **F1 winner market MVP** built for **Solana Seeker**.
+This repo is now in **spec-first + TDD pivot mode** for a USDC-based Anchor protocol.
 
-- **Network:** Solana **devnet** (MVP demo; no real money)
-- **Asset:** **SOL-only** pools (MVP)
-- **UX:** mobile-first, dark racing theme, swipeable driver cards, haptics
-- **State updates:** real-time odds/pools via on-chain account subscriptions
+## Current phase
+- No new feature code until spec pack is approved.
+- Source of truth is the spec set in root (currently DRAFT until checklist complete):
+  - `SPEC_PROTOCOL.md`
+  - `SPEC_INVARIANTS.md`
+  - `SPEC_CANONICAL.md`
+  - `SPEC_THREAT_MODEL.md`
+  - `SPEC_ACCOUNTS.md`
+  - `SPEC_STATE_MACHINE.md`
+  - `SPEC_EVENTS.md`
+  - `SPEC_ERRORS.md`
+  - `SPEC_INSTRUCTIONS/INDEX.md`
+  - `SPEC_INSTRUCTIONS/`
 
-## Links
-- Repo: https://github.com/opsclawd/pitstopprotocol
-- Project board: https://github.com/users/opsclawd/projects/1
+## Process gates
+- 1 PR per issue
+- Spec first -> tests first -> implementation
+- Independent review pass -> fix pass -> final review-summary comment
+- PR descriptions must include file-by-file summary
 
-## Tech stack (MVP)
-### On-chain
-- Rust + Anchor (single program)
-- SOL escrow (lamports)
-- Integer/fixed-point math only (no floats)
+## Archived pre-pivot line
+- tag: `archive-pre-usdc-pivot-2026-02-15`
+- branch: `archive/pre-usdc-pivot-2026-02-15`
 
-### Mobile
-- Bare React Native (Android-first / Seeker-first)
-- Solana Mobile (MWA / Seed Vault compatible)
 
-### Web (stub now, real client later)
-- Next.js (App Router)
-- Reuses shared `packages/*`
-
-### Oracle / automation
-- Node.js + TypeScript runner
-- Jolpica F1 API (schedule + post-race results)
-- GitHub Actions cron initially (easy pivot to Fly.io later)
-
-## Monorepo structure
-- `apps/mobile` — bare RN app (Seeker)
-- `apps/web` — Next.js stub
-- `packages/core` — shared math/types
-- `packages/chain` — PDAs + tx builders + subscriptions (shared)
-- `packages/oracle` — settlement runner
-- `docs/` — plan and architecture notes
-
-## MVP product rules
-- Winner-only markets (one race = one market)
-- Users can bet **multiple times** in a market, but only **add to the same driver position** (MVP)
-- Settlement is admin/oracle-triggered after race results are known
-
-## Docs
-- Project plan: `docs/PROJECT_PLAN.md`
-- Architecture notes: `docs/ARCHITECTURE.md`
-
-## Development (coming next)
-Mobile app and Anchor program scaffolds will be added next. When they land, this section will include:
-- wallet dev/testing (Mock MWA Wallet)
-- running the mobile app on Android
-- deploying program to devnet
-
+## Spec Pack Completion Checklist
+- [ ] Instruction specs fully filled (no TODO sections)
+- [ ] State schema spec added (fields/types/ranges)
+- [ ] Error taxonomy spec added (error -> failure mode mapping)
+- [ ] Canonical encoding includes byte-level format + test vectors
+- [ ] Runnable test harness exists and passes smoke tests
+- [ ] CI runs tests (not placeholders)

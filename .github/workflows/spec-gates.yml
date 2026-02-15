@@ -1,0 +1,18 @@
+name: spec-gates
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  spec-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Spec gate check
+        run: node scripts/spec_gate_check.js
+      - name: Canonical vector smoke
+        run: node tests/canonical.spec.js

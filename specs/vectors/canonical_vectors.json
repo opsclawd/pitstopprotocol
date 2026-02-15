@@ -1,0 +1,18 @@
+{
+  "vectorA": {
+    "descriptor": {
+      "round": "05",
+      "season": "2026",
+      "session": "race",
+      "sport": "f1"
+    },
+    "canonicalJson": "{\"round\":\"05\",\"season\":\"2026\",\"session\":\"race\",\"sport\":\"f1\"}",
+    "eventIdHex": "5621e7f82cd0b15b457944898ab557629067d4256eaa5b7dc6cec414d5c66a7f"
+  },
+  "vectorB": {
+    "eventIdHex": "0000000000000000000000000000000000000000000000000000000000000000",
+    "marketTypeByte": 0,
+    "rulesVersion": 1,
+    "marketIdHex": "b17820b1fb10fa804a7147ca7fd1e1666c62ef002e9adfd12019b35a28377664"
+  }
+}
