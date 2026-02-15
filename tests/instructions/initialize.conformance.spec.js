@@ -3,6 +3,8 @@ const constants = require('../../specs/constants.json');
 const { invokeInitializeOnProgram } = require('../harness/initialize_adapter');
 
 (async function run() {
+  // deterministic adapter timestamp for test reproducibility;
+  // on-chain implementation must use Clock::unix_timestamp.
   const nowTs = 1_800_000_000;
   const base = {
     authority: 'AuthA',
