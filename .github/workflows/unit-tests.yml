@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install deps
-        run: npm ci --ignore-scripts || npm install --ignore-scripts
+      - name: Install deps (deterministic)
+        run: npm ci --ignore-scripts
       - name: Run unit tests
-        run: node tests/unit/canonical_ids.spec.js && node tests/unit/timestamp_rules.spec.js && node tests/unit/math.spec.js
+        run: npm run test:unit
