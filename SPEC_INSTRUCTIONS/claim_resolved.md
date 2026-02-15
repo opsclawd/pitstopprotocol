@@ -41,7 +41,13 @@ Allow users to claim winnings (or mark loser claim as zero payout) after resolut
 
 ## Required tests
 - CLR-HP-001..003, CLR-REJ-001..004, CLR-INV-001..002
+- CLR-ORD-001: post-sweep claim fails by status error (`MarketNotResolved`) before any vault/account access error
 
 
 ## Security notes
 - Claim path relies on status gating; zero vault balance is not an authorization mechanism.
+
+
+## Failure ordering (locked)
+- Status gate is evaluated before vault account usage.
+- In Swept state, claim must fail with `MarketNotResolved` deterministically (not account-missing failure).

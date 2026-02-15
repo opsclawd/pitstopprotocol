@@ -1,5 +1,5 @@
 # sweep_remaining
-Version: v1.0.3
+Version: v1.0.4
 Status: LOCKED
 
 ## Purpose
@@ -33,6 +33,10 @@ After claim window expires, transfer remaining vault balance to treasury and clo
 
 ## Required tests
 - SWP-HP-001, SWP-REJ-001..004, SWP-ADV-001
+- SWP-AUTH-001: non-authority sweep rejected (`Unauthorized`)
+- SWP-WIN-001: claim window not expired rejected (`ClaimWindowNotExpired`)
+- SWP-SEED-001: vault close uses market PDA signer seeds and closes vault account
+- SWP-IDEM-001: repeat sweep fails deterministically via status gate (`MarketNotResolved`)
 
 
 ## Idempotency
@@ -47,3 +51,17 @@ After claim window expires, transfer remaining vault balance to treasury and clo
 
 ## Vault handling
 - Vault is closed in sweep path to prevent grief-deposits after terminal settlement.
+
+
+## Authorization and gating (locked)
+- Requires `authority == config.authority` (MVP, not permissionless).
+- Requires `market.status in {Resolved, Voided}` and `now > resolution_timestamp + claim_window_secs`.
+
+
+## Close semantics (locked)
+- Vault close must use market PDA signer seeds.
+- Tests must assert: vault account is closed (account fetch fails) and treasury balance increases by swept amount.
+
+
+## Idempotency (locked)
+- Re-running sweep must fail deterministically by status gate (`MarketNotResolved`), not by missing-account error.

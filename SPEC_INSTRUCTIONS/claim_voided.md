@@ -33,7 +33,13 @@ Refund full stake for positions in a voided market within claim window.
 
 ## Required tests
 - CLV-HP-001, CLV-REJ-001..003, CLV-INV-001
+- CLV-ORD-001: post-sweep claim fails by status error (`MarketNotVoided`) before any vault/account access error
 
 
 ## Security notes
 - Claim path relies on status gating; zero vault balance is not an authorization mechanism.
+
+
+## Failure ordering (locked)
+- Status gate is evaluated before vault account usage.
+- In Swept state, claim must fail with `MarketNotVoided` deterministically (not account-missing failure).
