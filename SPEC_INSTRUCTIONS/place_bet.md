@@ -1,5 +1,5 @@
 # place_bet
-Version: v1.0.1
+Version: v1.0.2
 Status: LOCKED
 
 ## Purpose
@@ -28,8 +28,8 @@ Transfer USDC from user to market vault and record/increment user position + poo
 - market.outcome_count != market.max_outcomes -> `MarketNotReady`
 - amount > 0 -> `ZeroAmount`
 - caps not exceeded -> `MarketCapExceeded` / `UserBetCapExceeded`
-- outcome_id must reference an initialized OutcomePool PDA for this market -> `OutcomeMismatch`
-- outcome pool market/outcome match -> `OutcomeMismatch`
+- outcome_id must reference an initialized OutcomePool PDA for this market -> `OutcomeMismatch (including missing or mismatched OutcomePool PDA)`
+- outcome pool market/outcome match -> `OutcomeMismatch (including missing or mismatched OutcomePool PDA)`
 
 ## Effects
 - token transfer user_usdc -> vault by `amount`

@@ -1,5 +1,5 @@
 # SPEC_STATE_MACHINE.md
-Version: v1.0.1
+Version: v1.0.2
 Status: DRAFT
 
 ## Market States
@@ -17,7 +17,7 @@ Status: DRAFT
 - resolve_market: Locked -> Resolved
 - void_market: Locked -> Voided
 - cancel_market: Seeding -> Voided
-- sweep_remaining: Resolved|Voided -> Swept (logical terminal for payout window lifecycle)
+- sweep_remaining: Resolved|Voided -> Swept (explicit on-chain terminal transition)
 
 ## Forbidden transitions (explicit)
 - Seeding -> Locked (must open first)
@@ -26,3 +26,9 @@ Status: DRAFT
 - Resolved -> Locked/Open/Seeding
 - Voided -> Locked/Open/Seeding
 - Swept -> any other state
+
+
+## Swept terminal guarantees
+- Swept is terminal and non-reversible.
+- No mutating instruction is valid in Swept (claims, sweep, lock, resolve, void, cancel, add outcomes, finalize, place bet).
+- Read-only queries remain allowed.

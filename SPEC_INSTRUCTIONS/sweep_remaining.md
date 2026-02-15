@@ -1,5 +1,5 @@
 # sweep_remaining
-Version: v1.0.1
+Version: v1.0.2
 Status: LOCKED
 
 ## Purpose
@@ -18,7 +18,7 @@ After claim window expires, transfer remaining vault balance to treasury.
 
 ## Preconditions
 - authority == config.authority -> `Unauthorized`
-- market.status in {Resolved, Voided} -> `MarketNotResolved` (single deterministic error when not eligible)
+- market.status in {Resolved, Voided} -> `MarketNotResolved` (single deterministic error when not eligible, incl Swept)
 - now > resolution_timestamp + claim_window_secs -> `ClaimWindowNotExpired`
 - treasury constraints valid (mint+owner) -> `InvalidTreasuryMint`/`InvalidTreasuryOwner`
 
@@ -35,3 +35,13 @@ After claim window expires, transfer remaining vault balance to treasury.
 
 ## Idempotency
 - Second sweep call must fail because status is no longer Resolved/Voided (returns `MarketNotResolved`).
+
+
+## Postconditions
+- `market.status == Swept`
+- `vault.amount == 0`
+- subsequent sweep attempts fail lifecycle gate
+
+
+## Vault handling
+- Vault is NOT closed in sweep path (remains open with zero balance).

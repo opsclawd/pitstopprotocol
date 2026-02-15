@@ -1,5 +1,5 @@
 # resolve_market
-Version: v1.0.1
+Version: v1.0.2
 Status: LOCKED
 
 ## Purpose
@@ -18,8 +18,8 @@ Resolve a locked market by setting winning outcome and payload hash.
 ## Preconditions
 - oracle == config.oracle -> `UnauthorizedOracle`
 - market.status == Locked -> `MarketNotLocked`
-- winning outcome must exist in market -> `InvalidOutcomeId`/`OutcomeMismatch`
-- Missing/invalid winning outcome pool account -> `OutcomeMismatch`
+- winning outcome must exist in market -> `InvalidOutcomeId`/`OutcomeMismatch (including missing or mismatched OutcomePool PDA)`
+- Missing/invalid winning outcome pool account -> `OutcomeMismatch (including missing or mismatched OutcomePool PDA)`
 
 ## Effects
 - market.status = Resolved

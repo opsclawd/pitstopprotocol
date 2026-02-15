@@ -1,5 +1,5 @@
 # SPEC_PROTOCOL.md
-Version: v1.0.1
+Version: v1.0.2
 Status: DRAFT (lock after instruction specs + harness are complete)
 
 ## Purpose
@@ -59,4 +59,10 @@ Any protocol change must:
 
 ## Sweep semantics (locked)
 - `Swept` is an explicit on-chain market status set by `sweep_remaining`.
-- `sweep_remaining` is non-idempotent; repeat calls fail via lifecycle gate (`MarketNotResolved`).
+- `sweep_remaining` is non-idempotent; repeat calls fail via lifecycle gate because status is no longer eligible (Swept).
+
+
+## Vault policy after sweep (locked)
+- Vault remains open after sweep (MVP choice).
+- Sweep transfers full vault balance to treasury; postcondition: `vault.amount == 0`.
+- Claims are rejected by status gate (market must be Resolved/Voided), not by balance checks.

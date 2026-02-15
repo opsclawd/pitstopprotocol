@@ -1,5 +1,5 @@
 # claim_resolved
-Version: v1.0.1
+Version: v1.0.2
 Status: LOCKED
 
 ## Purpose
@@ -21,8 +21,9 @@ Allow users to claim winnings (or mark loser claim as zero payout) after resolut
 ## Preconditions
 - Missing position PDA account -> framework account resolution failure (expected)
 
-- market.status == Resolved -> `MarketNotResolved`
+- market.status == Resolved -> `MarketNotResolved` (Swept also fails here)
 - !position.claimed -> `AlreadyClaimed`
+- outcome pool must exist for `(market, outcome_id)` and match seeds/fields -> `OutcomeMismatch`
 - now <= resolution_timestamp + claim_window_secs -> `ClaimWindowExpired`
 
 ## Effects
@@ -40,3 +41,7 @@ Allow users to claim winnings (or mark loser claim as zero payout) after resolut
 
 ## Required tests
 - CLR-HP-001..003, CLR-REJ-001..004, CLR-INV-001..002
+
+
+## Security notes
+- Claim path relies on status gating; zero vault balance is not an authorization mechanism.
