@@ -1,5 +1,5 @@
 # create_market
-Version: v1.0.0
+Version: v1.0.1
 Status: LOCKED
 
 ## 1) Purpose
@@ -27,7 +27,7 @@ Args:
 ## 4) Preconditions
 - authority is config.authority -> `Unauthorized`
 - token program pinned -> `InvalidTokenProgram`
-- `lock_timestamp > now` -> `LockInPast`
+- `lock_timestamp <= now` -> `LockInPast`
 - `1 <= max_outcomes <= MAX_OUTCOMES` -> `ZeroOutcomes`/`TooManyOutcomes`
 - supported market_type/version -> `UnsupportedMarketType`/`UnsupportedRulesVersion`
 - on-chain recomputed market_id must match provided -> `InvalidMarketId`

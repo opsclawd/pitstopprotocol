@@ -1,5 +1,5 @@
 # SPEC_ERRORS.md
-Version: v1.1.0
+Version: v1.1.1
 Status: LOCKED
 
 Stable protocol error taxonomy and instruction mapping.
@@ -14,7 +14,7 @@ Stable protocol error taxonomy and instruction mapping.
 - InvalidTreasuryOwner
 - InvalidCap
 - InvalidClaimWindow
-- FeeTooHigh
+- FeeTooHigh (reserved until admin fee-update instruction is implemented)
 - LockInPast
 - TooEarlyToLock
 - BettingClosed
@@ -89,9 +89,10 @@ Stable protocol error taxonomy and instruction mapping.
 - amount == 0 -> ZeroAmount
 - market cap exceeded -> MarketCapExceeded
 - user cap exceeded -> UserBetCapExceeded
-- outcome_pool missing/mismatched -> OutcomeMismatch
+- outcome_pool mismatched relation -> OutcomeMismatch
+- outcome_pool missing/uninitialized -> framework account failure unless explicitly wrapped
 - token program mismatch -> InvalidTokenProgram
-- user/vault mint or owner mismatch -> InvalidTreasuryMint/InvalidTreasuryOwner (or account constraint failure)
+- user/vault mint or owner mismatch -> framework account constraint failure unless explicitly wrapped to protocol errors
 - checked math overflow -> Overflow
 
 ### lock_market
@@ -102,7 +103,9 @@ Stable protocol error taxonomy and instruction mapping.
 ### resolve_market
 - signer != config.oracle -> UnauthorizedOracle
 - market not Locked -> MarketNotLocked
-- outcome invalid/missing/mismatched -> InvalidOutcomeId/OutcomeMismatch
+- outcome_id > 99 -> InvalidOutcomeId
+- outcome pool mismatched relation -> OutcomeMismatch
+- outcome pool missing/uninitialized -> framework account failure unless explicitly wrapped
 
 ### void_market
 - signer != config.oracle -> UnauthorizedOracle
@@ -142,3 +145,8 @@ The following may surface as Anchor/Solana framework account resolution failures
 - account discriminator/type mismatch
 
 Where deterministic protocol errors are required by instruction spec, implementation must map to the corresponding protocol error.
+
+
+## Authority and precedence
+- Per-instruction specs in `SPEC_INSTRUCTIONS/*.md` are authoritative for precondition logic.
+- `SPEC_ERRORS.md` is the canonical error registry + summary mapping and must remain consistent with instruction specs.
