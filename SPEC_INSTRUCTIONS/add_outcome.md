@@ -1,5 +1,5 @@
 # add_outcome
-Version: v1.0.1
+Version: v1.0.2
 Status: LOCKED
 
 ## Purpose
@@ -43,3 +43,7 @@ Add one outcome pool to a seeding market.
 
 ## Required tests
 - ADO-HP-001, ADO-REJ-001..005
+
+
+## Event contract link
+- Event spec reference: `SPEC_EVENTS.md` -> `OutcomeAdded`.

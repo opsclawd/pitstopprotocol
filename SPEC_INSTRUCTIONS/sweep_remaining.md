@@ -1,5 +1,5 @@
 # sweep_remaining
-Version: v1.0.4
+Version: v1.0.6
 Status: LOCKED
 
 ## Purpose
@@ -29,7 +29,7 @@ After claim window expires, transfer remaining vault balance to treasury and clo
 - market.status = Swept (explicit on-chain terminal status)
 
 ## Events
-- `Swept`
+- `MarketSweptEvent`
 
 ## Required tests
 - SWP-HP-001, SWP-REJ-001..004, SWP-ADV-001
@@ -65,3 +65,7 @@ After claim window expires, transfer remaining vault balance to treasury and clo
 
 ## Idempotency (locked)
 - Re-running sweep must fail deterministically by status gate (`MarketNotResolved`), not by missing-account error.
+
+
+## Event contract link
+- Event spec reference: `SPEC_EVENTS.md` -> `MarketSweptEvent`.

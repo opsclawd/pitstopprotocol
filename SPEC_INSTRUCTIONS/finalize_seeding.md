@@ -1,5 +1,5 @@
 # finalize_seeding
-Version: v1.0.1
+Version: v1.0.2
 Status: LOCKED
 
 ## Purpose
@@ -33,3 +33,7 @@ Transition market from Seeding to Open once all outcomes are seeded.
 
 ## Required tests
 - FSE-HP-001, FSE-REJ-001..004
+
+
+## Event contract link
+- Event spec reference: `SPEC_EVENTS.md` -> `MarketOpened`.

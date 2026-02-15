@@ -1,5 +1,5 @@
 # cancel_market
-Version: v1.0.1
+Version: v1.0.3
 Status: LOCKED
 
 ## Purpose
@@ -29,7 +29,13 @@ Recovery path to void dead markets during Seeding before bets exist.
 - set resolution timestamp/hash baseline
 
 ## Events
-- `MarketCancelled` (and optional `MarketVoided`)
+- `MarketCancelled`
+
+Canceled markets set status=Voided but do NOT emit `MarketVoided` in MVP.
 
 ## Required tests
 - CNL-HP-001, CNL-REJ-001..005, CNL-ADV-001
+
+
+## Event contract link
+- Event spec reference: `SPEC_EVENTS.md` -> `MarketCancelled`.

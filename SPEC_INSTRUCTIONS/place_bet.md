@@ -1,5 +1,5 @@
 # place_bet
-Version: v1.0.4
+Version: v1.0.5
 Status: LOCKED
 
 ## Purpose
@@ -52,3 +52,7 @@ Transfer USDC from user to market vault and record/increment user position + poo
 
 ## Outcome existence test requirement
 - Tests must include both cases: wrong PDA and missing/uninitialized PDA, each mapping to `OutcomeMismatch`.
+
+
+## Event contract link
+- Event spec reference: `SPEC_EVENTS.md` -> `BetPlaced`.
