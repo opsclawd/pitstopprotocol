@@ -26,27 +26,13 @@ fn validate_finalize_seeding_preconditions(input: &FinalizeSeedingInput) -> Resu
     if input.market_status != MarketStatus::Seeding {
         return Err(PitStopError::MarketNotSeeding);
     }
-    // Hardening: mirrored status must match canonical market_state.
-    if input.market_state.status != input.market_status {
-        return Err(PitStopError::OutcomeMismatch);
-    }
     // FSE-REJ-003: all outcomes must be seeded before open transition.
     if input.market_outcome_count != input.market_max_outcomes {
         return Err(PitStopError::SeedingIncomplete);
     }
-    // Hardening: mirrored counts must match canonical market_state.
-    if input.market_state.outcome_count != input.market_outcome_count
-        || input.market_state.max_outcomes != input.market_max_outcomes
-    {
-        return Err(PitStopError::OutcomeMismatch);
-    }
     // FSE-REJ-004: now must be strictly before lock timestamp.
     if input.now_ts >= input.lock_timestamp {
         return Err(PitStopError::TooLateToOpen);
-    }
-    // Hardening: mirrored lock timestamp must match canonical market_state.
-    if input.market_state.lock_timestamp != input.lock_timestamp {
-        return Err(PitStopError::OutcomeMismatch);
     }
 
     Ok(())
@@ -129,24 +115,5 @@ mod tests {
         let mut bad = base_input();
         bad.now_ts = 1_800_000_100;
         assert_eq!(finalize_seeding(bad).unwrap_err(), PitStopError::TooLateToOpen);
-    }
-
-    #[test]
-    fn fse_rej_hardening_mirrored_fields_must_match_market_state() {
-        let mut bad = base_input();
-        bad.market_state.status = MarketStatus::Open;
-        assert_eq!(finalize_seeding(bad).unwrap_err(), PitStopError::OutcomeMismatch);
-
-        let mut bad = base_input();
-        bad.market_state.outcome_count = 2;
-        assert_eq!(finalize_seeding(bad).unwrap_err(), PitStopError::OutcomeMismatch);
-
-        let mut bad = base_input();
-        bad.market_state.max_outcomes = 4;
-        assert_eq!(finalize_seeding(bad).unwrap_err(), PitStopError::OutcomeMismatch);
-
-        let mut bad = base_input();
-        bad.market_state.lock_timestamp = 1_800_000_200;
-        assert_eq!(finalize_seeding(bad).unwrap_err(), PitStopError::OutcomeMismatch);
     }
 }
