@@ -5,6 +5,8 @@ pub mod errors;
 pub mod instructions;
 pub mod state;
 
+pub use instructions::*;
+
 declare_id!("PitSTop111111111111111111111111111111111111");
 
 #[program]

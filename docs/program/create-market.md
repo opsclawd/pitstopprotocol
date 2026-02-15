@@ -22,4 +22,4 @@ Initializes a new market PDA for a race.
 - `bump` captured from PDA derivation
 
 ## PDA
-- Market PDA seeds: `b"market" + race_id_hash`
+- Market PDA seeds: `b"market" + authority_pubkey + race_id_hash`

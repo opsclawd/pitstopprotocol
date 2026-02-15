@@ -16,7 +16,7 @@ pub struct CreateMarket<'info> {
         init,
         payer = authority,
         space = Market::INIT_SPACE,
-        seeds = [b"market", race_id_hash.as_ref()],
+        seeds = [b"market", authority.key().as_ref(), race_id_hash.as_ref()],
         bump
     )]
     pub market: Account<'info, Market>,
