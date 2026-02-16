@@ -153,6 +153,48 @@ impl OutcomePool {
     pub const LEN: usize = 8 + 32 + 1 + 8;
 }
 
+/// User position for a given (market, user, outcome).
+///
+/// PDA: seeds = ["position", market, user, outcome_id]
+#[account]
+#[derive(Debug)]
+pub struct Position {
+    pub market: Pubkey,
+    pub user: Pubkey,
+    pub outcome_id: u8,
+    pub amount: u64,
+    pub claimed: bool,
+    pub payout: u64,
+}
+
+impl Position {
+    pub const LEN: usize = 8
+        + 32 // market
+        + 32 // user
+        + 1 // outcome_id
+        + 8 // amount
+        + 1 // claimed
+        + 8; // payout
+
+    pub fn to_parity(&self) -> parity_state::Position {
+        parity_state::Position {
+            market: self.market.to_string(),
+            user: self.user.to_string(),
+            outcome_id: self.outcome_id,
+            amount: self.amount,
+            claimed: self.claimed,
+            payout: self.payout,
+        }
+    }
+
+    pub fn apply_parity(&mut self, p: &parity_state::Position) {
+        self.outcome_id = p.outcome_id;
+        self.amount = p.amount;
+        self.claimed = p.claimed;
+        self.payout = p.payout;
+    }
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct InitializeArgs {
     pub treasury_authority: Pubkey,
@@ -276,6 +318,108 @@ pub struct AddOutcome<'info> {
 pub struct FinalizeSeeding<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
+
+    pub config: Account<'info, Config>,
+
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct PlaceBetArgs {
+    pub outcome_id: u8,
+    pub amount: u64,
+}
+
+/// Accounts for `place_bet`.
+///
+/// Transfers `amount` USDC from the user to the market vault and updates:
+/// - market.total_pool
+/// - outcome_pool.pool_amount
+/// - position.amount
+#[derive(Accounts)]
+#[instruction(args: PlaceBetArgs)]
+pub struct PlaceBet<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+
+    pub config: Account<'info, Config>,
+
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+
+    /// CHECK: validated/decoded in handler so missing/wrong relation can map to OutcomeMismatch.
+    #[account(mut)]
+    pub outcome_pool: AccountInfo<'info>,
+
+    #[account(
+        init_if_needed,
+        payer = user,
+        space = Position::LEN,
+        seeds = [b"position", market.key().as_ref(), user.key().as_ref(), &[args.outcome_id]],
+        bump
+    )]
+    pub position: Account<'info, Position>,
+
+    #[account(mut)]
+    pub user_usdc: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub vault: InterfaceAccount<'info, TokenAccount>,
+
+    pub usdc_mint: InterfaceAccount<'info, Mint>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+
+    pub system_program: Program<'info, System>,
+}
+
+/// Accounts for `lock_market`.
+#[derive(Accounts)]
+pub struct LockMarket<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    pub config: Account<'info, Config>,
+
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct ResolveMarketArgs {
+    pub winning_outcome_id: u8,
+    pub payload_hash: [u8; 32],
+}
+
+/// Accounts for `resolve_market`.
+#[derive(Accounts)]
+#[instruction(args: ResolveMarketArgs)]
+pub struct ResolveMarket<'info> {
+    #[account(mut)]
+    pub oracle: Signer<'info>,
+
+    pub config: Account<'info, Config>,
+
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+
+    /// CHECK: validated/decoded in handler so missing/wrong relation can map to OutcomeMismatch.
+    pub winning_outcome_pool: AccountInfo<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct VoidMarketArgs {
+    pub payload_hash: [u8; 32],
+}
+
+/// Accounts for `void_market`.
+#[derive(Accounts)]
+pub struct VoidMarket<'info> {
+    #[account(mut)]
+    pub oracle: Signer<'info>,
 
     pub config: Account<'info, Config>,
 

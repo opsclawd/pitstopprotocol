@@ -44,6 +44,22 @@ pub mod pitstop {
     pub fn finalize_seeding(ctx: Context<FinalizeSeeding>) -> Result<()> {
         handlers::finalize_seeding(ctx)
     }
+
+    pub fn place_bet(ctx: Context<PlaceBet>, args: PlaceBetArgs) -> Result<()> {
+        handlers::place_bet(ctx, args)
+    }
+
+    pub fn lock_market(ctx: Context<LockMarket>) -> Result<()> {
+        handlers::lock_market(ctx)
+    }
+
+    pub fn resolve_market(ctx: Context<ResolveMarket>, args: ResolveMarketArgs) -> Result<()> {
+        handlers::resolve_market(ctx, args)
+    }
+
+    pub fn void_market(ctx: Context<VoidMarket>, args: VoidMarketArgs) -> Result<()> {
+        handlers::void_market(ctx, args)
+    }
 }
 
 mod handlers {
@@ -259,6 +275,244 @@ mod handlers {
         emit!(anchor_events::MarketOpened {
             market: ctx.accounts.market.key(),
             timestamp: now_ts,
+        });
+
+        Ok(())
+    }
+
+    pub fn place_bet(ctx: Context<PlaceBet>, args: PlaceBetArgs) -> Result<()> {
+        use anchor_spl::token_interface::{transfer_checked, TransferChecked};
+
+        // Anchor boundary checks for pinned token program + mint/vault relations.
+        require_keys_eq!(
+            ctx.accounts.token_program.key(),
+            ctx.accounts.config.token_program,
+            PitStopAnchorError::InvalidTokenProgram
+        );
+        require_keys_eq!(
+            ctx.accounts.usdc_mint.key(),
+            ctx.accounts.config.usdc_mint,
+            PitStopAnchorError::InvalidTreasuryMint
+        );
+        require_keys_eq!(
+            ctx.accounts.vault.key(),
+            ctx.accounts.market.vault,
+            PitStopAnchorError::OutcomeMismatch
+        );
+        require_keys_eq!(
+            ctx.accounts.user_usdc.mint,
+            ctx.accounts.usdc_mint.key(),
+            PitStopAnchorError::InvalidTreasuryMint
+        );
+        require_keys_eq!(
+            ctx.accounts.user_usdc.owner,
+            ctx.accounts.user.key(),
+            PitStopAnchorError::Unauthorized
+        );
+
+        // Load/validate outcome_pool with spec-mapped error behavior.
+        let expected_pool = Pubkey::find_program_address(
+            &[b"outcome", ctx.accounts.market.key().as_ref(), &[args.outcome_id]],
+            &crate::id(),
+        )
+        .0;
+        if ctx.accounts.outcome_pool.key() != expected_pool {
+            return Err(error!(PitStopAnchorError::OutcomeMismatch));
+        }
+        if ctx.accounts.outcome_pool.owner != &crate::id() {
+            return Err(error!(PitStopAnchorError::OutcomeMismatch));
+        }
+        let mut outcome_pool: OutcomePool = {
+            let data_ref = ctx.accounts.outcome_pool.try_borrow_data()?;
+            if data_ref.is_empty() {
+                return Err(error!(PitStopAnchorError::OutcomeMismatch));
+            }
+            let mut slice: &[u8] = &data_ref;
+            OutcomePool::try_deserialize(&mut slice)
+                .map_err(|_| error!(PitStopAnchorError::OutcomeMismatch))?
+        };
+        if outcome_pool.market != ctx.accounts.market.key() || outcome_pool.outcome_id != args.outcome_id {
+            return Err(error!(PitStopAnchorError::OutcomeMismatch));
+        }
+
+        // Initialize position metadata on first creation.
+        if ctx.accounts.position.market == Pubkey::default() {
+            let pos = &mut ctx.accounts.position;
+            pos.market = ctx.accounts.market.key();
+            pos.user = ctx.accounts.user.key();
+            pos.outcome_id = args.outcome_id;
+            pos.amount = 0;
+            pos.claimed = false;
+            pos.payout = 0;
+        }
+
+        let now_ts = clock_unix_timestamp()?;
+        let market_state = ctx.accounts.market.to_parity();
+        let input = instructions::place_bet::PlaceBetInput {
+            config_paused: ctx.accounts.config.paused,
+            market_status: market_state.status,
+            now_ts,
+            market_lock_timestamp: market_state.lock_timestamp,
+            outcome_id: args.outcome_id,
+            market_outcome_count: market_state.outcome_count,
+            market_max_outcomes: market_state.max_outcomes,
+            amount: args.amount,
+            token_program: ctx.accounts.token_program.key().to_string(),
+            outcome_pool_exists: true,
+            outcome_pool_market: outcome_pool.market.to_string(),
+            outcome_pool_outcome_id: outcome_pool.outcome_id,
+            market: ctx.accounts.market.key().to_string(),
+            user: ctx.accounts.user.key().to_string(),
+            market_total_pool: market_state.total_pool,
+            max_total_pool_per_market: ctx.accounts.config.max_total_pool_per_market,
+            user_position_amount: ctx.accounts.position.amount,
+            max_bet_per_user_per_market: ctx.accounts.config.max_bet_per_user_per_market,
+            outcome_pool_amount: outcome_pool.pool_amount,
+            vault_amount: ctx.accounts.vault.amount,
+            market_state,
+            outcome_pool_state: crate::state::OutcomePool {
+                market: outcome_pool.market.to_string(),
+                outcome_id: outcome_pool.outcome_id,
+                pool_amount: outcome_pool.pool_amount,
+            },
+            position_state: ctx.accounts.position.to_parity(),
+        };
+
+        let (new_market, new_pool, new_pos, _new_vault_amount, evt) =
+            instructions::place_bet::place_bet(input).map_err(PitStopAnchorError::from)?;
+
+        // Funds move (CPI) happens only after deterministic preconditions pass.
+        let cpi_accounts = TransferChecked {
+            from: ctx.accounts.user_usdc.to_account_info(),
+            mint: ctx.accounts.usdc_mint.to_account_info(),
+            to: ctx.accounts.vault.to_account_info(),
+            authority: ctx.accounts.user.to_account_info(),
+        };
+        let cpi_ctx = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
+        transfer_checked(cpi_ctx, args.amount, ctx.accounts.usdc_mint.decimals)?;
+
+        // Commit state updates.
+        ctx.accounts.market.apply_parity(&new_market);
+        outcome_pool.pool_amount = new_pool.pool_amount;
+        {
+            let mut data_mut = ctx.accounts.outcome_pool.try_borrow_mut_data()?;
+            let mut dst: &mut [u8] = &mut data_mut;
+            outcome_pool.try_serialize(&mut dst)?;
+        }
+        ctx.accounts.position.apply_parity(&new_pos);
+
+        emit!(anchor_events::BetPlaced {
+            market: ctx.accounts.market.key(),
+            user: ctx.accounts.user.key(),
+            outcome_id: evt.outcome_id,
+            amount: evt.amount,
+            market_total_pool: evt.market_total_pool,
+            outcome_pool_amount: evt.outcome_pool_amount,
+            timestamp: evt.timestamp,
+        });
+
+        Ok(())
+    }
+
+    pub fn lock_market(ctx: Context<LockMarket>) -> Result<()> {
+        let now_ts = clock_unix_timestamp()?;
+        let market_state = ctx.accounts.market.to_parity();
+        let input = instructions::lock_market::LockMarketInput {
+            authority: ctx.accounts.authority.key().to_string(),
+            config_authority: ctx.accounts.config.authority.to_string(),
+            market: ctx.accounts.market.key().to_string(),
+            market_status: market_state.status,
+            now_ts,
+            lock_timestamp: market_state.lock_timestamp,
+            market_state,
+        };
+
+        let (new_market, evt) =
+            instructions::lock_market::lock_market(input).map_err(PitStopAnchorError::from)?;
+        ctx.accounts.market.apply_parity(&new_market);
+
+        emit!(anchor_events::MarketLocked {
+            market: ctx.accounts.market.key(),
+            timestamp: evt.timestamp,
+        });
+
+        Ok(())
+    }
+
+    pub fn resolve_market(ctx: Context<ResolveMarket>, args: ResolveMarketArgs) -> Result<()> {
+        let now_ts = clock_unix_timestamp()?;
+
+        let expected_pool = Pubkey::find_program_address(
+            &[b"outcome", ctx.accounts.market.key().as_ref(), &[args.winning_outcome_id]],
+            &crate::id(),
+        )
+        .0;
+        if ctx.accounts.winning_outcome_pool.key() != expected_pool {
+            return Err(error!(PitStopAnchorError::OutcomeMismatch));
+        }
+        if ctx.accounts.winning_outcome_pool.owner != &crate::id() {
+            return Err(error!(PitStopAnchorError::OutcomeMismatch));
+        }
+        let winning_pool: OutcomePool = {
+            let data_ref = ctx.accounts.winning_outcome_pool.try_borrow_data()?;
+            if data_ref.is_empty() {
+                return Err(error!(PitStopAnchorError::OutcomeMismatch));
+            }
+            let mut slice: &[u8] = &data_ref;
+            OutcomePool::try_deserialize(&mut slice)
+                .map_err(|_| error!(PitStopAnchorError::OutcomeMismatch))?
+        };
+
+        let market_state = ctx.accounts.market.to_parity();
+        let input = instructions::resolve_market::ResolveMarketInput {
+            oracle: ctx.accounts.oracle.key().to_string(),
+            config_oracle: ctx.accounts.config.oracle.to_string(),
+            market: ctx.accounts.market.key().to_string(),
+            market_state,
+            winning_outcome_id: args.winning_outcome_id,
+            payload_hash: args.payload_hash,
+            winning_outcome_pool_state: Some(crate::state::OutcomePool {
+                market: winning_pool.market.to_string(),
+                outcome_id: winning_pool.outcome_id,
+                pool_amount: winning_pool.pool_amount,
+            }),
+            now_ts,
+        };
+
+        let (new_market, evt) = instructions::resolve_market::resolve_market(input)
+            .map_err(PitStopAnchorError::from)?;
+        ctx.accounts.market.apply_parity(&new_market);
+
+        emit!(anchor_events::MarketResolved {
+            market: ctx.accounts.market.key(),
+            winning_outcome: evt.winning_outcome,
+            payload_hash: evt.payload_hash,
+            resolution_timestamp: evt.resolution_timestamp,
+        });
+
+        Ok(())
+    }
+
+    pub fn void_market(ctx: Context<VoidMarket>, args: VoidMarketArgs) -> Result<()> {
+        let now_ts = clock_unix_timestamp()?;
+        let market_state = ctx.accounts.market.to_parity();
+        let input = instructions::void_market::VoidMarketInput {
+            oracle: ctx.accounts.oracle.key().to_string(),
+            config_oracle: ctx.accounts.config.oracle.to_string(),
+            market: ctx.accounts.market.key().to_string(),
+            payload_hash: args.payload_hash,
+            now_ts,
+            market_state,
+        };
+
+        let (new_market, evt) =
+            instructions::void_market::void_market(input).map_err(PitStopAnchorError::from)?;
+        ctx.accounts.market.apply_parity(&new_market);
+
+        emit!(anchor_events::MarketVoided {
+            market: ctx.accounts.market.key(),
+            payload_hash: evt.payload_hash,
+            resolution_timestamp: evt.resolution_timestamp,
         });
 
         Ok(())
