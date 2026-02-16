@@ -44,3 +44,9 @@ pub struct BetPlaced {
     pub outcome_pool_amount: u64,
     pub timestamp: i64,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MarketLocked {
+    pub market: String,
+    pub timestamp: i64,
+}
