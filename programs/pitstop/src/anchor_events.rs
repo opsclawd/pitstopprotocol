@@ -35,3 +35,35 @@ pub struct MarketOpened {
     pub market: Pubkey,
     pub timestamp: i64,
 }
+
+#[event]
+pub struct BetPlaced {
+    pub market: Pubkey,
+    pub user: Pubkey,
+    pub outcome_id: u8,
+    pub amount: u64,
+    pub market_total_pool: u64,
+    pub outcome_pool_amount: u64,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct MarketLocked {
+    pub market: Pubkey,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct MarketResolved {
+    pub market: Pubkey,
+    pub winning_outcome: u8,
+    pub payload_hash: [u8; 32],
+    pub resolution_timestamp: i64,
+}
+
+#[event]
+pub struct MarketVoided {
+    pub market: Pubkey,
+    pub payload_hash: [u8; 32],
+    pub resolution_timestamp: i64,
+}
