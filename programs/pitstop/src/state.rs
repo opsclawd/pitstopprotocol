@@ -46,3 +46,11 @@ pub struct OutcomePool {
     pub outcome_id: u8,
     pub pool_amount: u64,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Position {
+    pub market: String,
+    pub user: String,
+    pub outcome_id: u8,
+    pub amount: u64,
+}

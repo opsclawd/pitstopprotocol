@@ -19,4 +19,11 @@ pub enum PitStopError {
     OutcomeMismatch,
     SeedingIncomplete,
     TooLateToOpen,
+    ProtocolPaused,
+    MarketNotOpen,
+    BettingClosed,
+    MarketNotReady,
+    ZeroAmount,
+    MarketCapExceeded,
+    UserBetCapExceeded,
 }
