@@ -52,20 +52,29 @@ mod handlers {
 
     use anchor_spl::token_interface::{Mint, TokenAccount};
 
+    /// Single clock read helper so all handlers use the same on-chain time source.
+    ///
+    /// Why this exists:
+    /// - Keeps timestamp sourcing consistent across instructions.
+    /// - Makes parity-input construction explicit (`now_ts` always comes from Clock).
     fn clock_unix_timestamp() -> Result<i64> {
         Ok(Clock::get()?.unix_timestamp)
     }
 
     pub fn initialize(ctx: Context<Initialize>, args: InitializeArgs) -> Result<()> {
-        // Spec-required validations with protocol errors (not Anchor constraint errors).
+        // Layer 1 validation (Anchor handler level):
+        // perform explicit protocol-mapped guards before invoking parity logic.
+        //
+        // We intentionally map to PitStopAnchorError here so callers see the same
+        // deterministic error taxonomy expected by LOCKED specs.
         require_keys_eq!(
             ctx.accounts.token_program.key(),
             Pubkey::from_str(constants::REQUIRED_TOKEN_PROGRAM).unwrap(),
             PitStopAnchorError::InvalidTokenProgram
         );
 
-        // Anchor token_interface accounts allow reading decimals even if Token-2022,
-        // but we pin via token_program above.
+        // Anchor token_interface lets us read decimals regardless of token flavor,
+        // but protocol is currently pinned to USDC(6) + required token program.
         let usdc_mint: &InterfaceAccount<Mint> = &ctx.accounts.usdc_mint;
         require!(usdc_mint.decimals == 6, PitStopAnchorError::InvalidMintDecimals);
 
@@ -77,7 +86,9 @@ mod handlers {
             PitStopAnchorError::InvalidTreasuryOwner
         );
 
-        // Call parity layer for remaining validations and canonical field defaults.
+        // Layer 2 validation (parity/core layer):
+        // convert Anchor accounts/args into the pure parity input and let the
+        // deterministic spec implementation enforce remaining checks/defaults.
         let now_ts = clock_unix_timestamp()?;
         let input = instructions::initialize::InitializeInput {
             authority: ctx.accounts.authority.key().to_string(),
@@ -96,7 +107,8 @@ mod handlers {
 
         let (cfg, evt) = instructions::initialize::initialize(input).map_err(PitStopAnchorError::from)?;
 
-        // Persist on-chain config.
+        // State commit:
+        // parity returned canonical config values; persist those onto Anchor account.
         let config = &mut ctx.accounts.config;
         config.authority = ctx.accounts.authority.key();
         config.oracle = ctx.accounts.authority.key();
@@ -110,6 +122,8 @@ mod handlers {
         config.claim_window_secs = cfg.claim_window_secs;
         config.token_program = Pubkey::from_str(constants::REQUIRED_TOKEN_PROGRAM).unwrap();
 
+        // Event emission:
+        // emit after successful state write so off-chain observers see committed transitions.
         emit!(anchor_events::ConfigInitialized {
             authority: ctx.accounts.authority.key(),
             oracle: ctx.accounts.authority.key(),
@@ -123,6 +137,7 @@ mod handlers {
     }
 
     pub fn create_market(ctx: Context<CreateMarket>, args: CreateMarketArgs) -> Result<()> {
+        // Pre-flight account compatibility checks at Anchor boundary.
         require_keys_eq!(
             ctx.accounts.token_program.key(),
             ctx.accounts.config.token_program,
@@ -130,6 +145,8 @@ mod handlers {
         );
         require_keys_eq!(ctx.accounts.usdc_mint.key(), ctx.accounts.config.usdc_mint, PitStopAnchorError::InvalidTreasuryMint);
 
+        // Build parity input from Anchor accounts/args.
+        // This keeps one authoritative implementation for business rules.
         let now_ts = clock_unix_timestamp()?;
         let input = instructions::create_market::CreateMarketInput {
             authority: ctx.accounts.authority.key().to_string(),
@@ -148,6 +165,7 @@ mod handlers {
 
         let (mkt, evt) = instructions::create_market::create_market(input).map_err(PitStopAnchorError::from)?;
 
+        // Commit parity result into on-chain Market account.
         let market = &mut ctx.accounts.market;
         market.market_id = mkt.market_id;
         market.event_id = mkt.event_id;
@@ -178,6 +196,8 @@ mod handlers {
     }
 
     pub fn add_outcome(ctx: Context<AddOutcome>, args: AddOutcomeArgs) -> Result<()> {
+        // Convert current Market account into parity snapshot, run deterministic
+        // add_outcome logic, then write back the resulting state.
         let now_ts = clock_unix_timestamp()?;
 
         let market_state = ctx.accounts.market.to_parity();
@@ -197,7 +217,8 @@ mod handlers {
         let (new_market, _pool, evt) =
             instructions::add_outcome::add_outcome(input).map_err(PitStopAnchorError::from)?;
 
-        // Initialize outcome pool.
+        // Initialize the newly created outcome_pool PDA.
+        // Seeds/space allocation are enforced by the Anchor account context.
         let outcome_pool = &mut ctx.accounts.outcome_pool;
         outcome_pool.market = ctx.accounts.market.key();
         outcome_pool.outcome_id = args.outcome_id;
@@ -216,6 +237,7 @@ mod handlers {
     }
 
     pub fn finalize_seeding(ctx: Context<FinalizeSeeding>) -> Result<()> {
+        // Finalize transition is parity-driven: snapshot -> validate/transition -> commit.
         let now_ts = clock_unix_timestamp()?;
         let market_state = ctx.accounts.market.to_parity();
         let input = instructions::finalize_seeding::FinalizeSeedingInput {

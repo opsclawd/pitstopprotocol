@@ -6,6 +6,10 @@ use anchor_spl::{
 
 use crate::state as parity_state;
 
+/// Canonical protocol configuration PDA (`seeds = ["config"]`).
+///
+/// This mirrors the parity `state::Config` shape, but uses Anchor-friendly
+/// account storage types (Pubkey/bool/u64/i64).
 #[account]
 #[derive(Debug)]
 pub struct Config {
@@ -48,6 +52,10 @@ pub enum MarketStatus {
     Swept,
 }
 
+/// Market account PDA (`seeds = ["market", market_id]`).
+///
+/// Stored as Anchor account state, converted to/from parity `state::Market`
+/// inside handlers to preserve locked business semantics.
 #[account]
 #[derive(Debug)]
 pub struct Market {
@@ -82,6 +90,7 @@ impl Market {
         + 1 // market_type
         + 2; // rules_version
 
+    /// Anchor -> parity projection used before invoking pure instruction logic.
     pub fn to_parity(&self) -> parity_state::Market {
         parity_state::Market {
             market_id: self.market_id,
@@ -107,6 +116,7 @@ impl Market {
         }
     }
 
+    /// Parity -> Anchor commit used after successful validation/transition.
     pub fn apply_parity(&mut self, p: &parity_state::Market) {
         self.market_id = p.market_id;
         self.event_id = p.event_id;
@@ -151,6 +161,10 @@ pub struct InitializeArgs {
     pub claim_window_secs: i64,
 }
 
+/// Accounts for `initialize`.
+///
+/// Creates the single Config PDA and validates mint/treasury/token program
+/// compatibility in handler logic.
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
@@ -184,6 +198,10 @@ pub struct CreateMarketArgs {
     pub rules_version: u16,
 }
 
+/// Accounts for `create_market`.
+///
+/// Creates the Market PDA and its vault ATA (owned by Market PDA) so later
+/// betting/claim flows can move funds through a canonical escrow account.
 #[derive(Accounts)]
 #[instruction(args: CreateMarketArgs)]
 pub struct CreateMarket<'info> {
@@ -224,6 +242,9 @@ pub struct AddOutcomeArgs {
     pub outcome_id: u8,
 }
 
+/// Accounts for `add_outcome`.
+///
+/// Creates one OutcomePool PDA per `(market, outcome_id)`.
 #[derive(Accounts)]
 #[instruction(args: AddOutcomeArgs)]
 pub struct AddOutcome<'info> {
@@ -247,6 +268,10 @@ pub struct AddOutcome<'info> {
     pub system_program: Program<'info, System>,
 }
 
+/// Accounts for `finalize_seeding`.
+///
+/// Mutates an existing Market account from Seeding -> Open after all outcomes
+/// are present and lock timing allows transition.
 #[derive(Accounts)]
 pub struct FinalizeSeeding<'info> {
     #[account(mut)]
