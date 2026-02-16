@@ -28,7 +28,4 @@ pub enum PitStopError {
     UserBetCapExceeded,
     Overflow,
     TooEarlyToLock,
-    TooLateToCancel,
-    MarketHasBets,
-    VaultNotEmpty,
 }

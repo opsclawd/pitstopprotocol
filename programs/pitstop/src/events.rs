@@ -50,9 +50,3 @@ pub struct MarketLocked {
     pub market: String,
     pub timestamp: i64,
 }
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct MarketCancelled {
-    pub market: String,
-    pub timestamp: i64,
-}
