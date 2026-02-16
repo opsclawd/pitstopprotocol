@@ -6,6 +6,9 @@ use anchor_spl::{
 
 use crate::state as parity_state;
 
+/// Canonical PDA seed for the singleton Config account.
+pub const CONFIG_SEED: &[u8] = b"config";
+
 /// Canonical protocol configuration PDA (`seeds = ["config"]`).
 ///
 /// This mirrors the parity `state::Config` shape, but uses Anchor-friendly
@@ -216,7 +219,7 @@ pub struct Initialize<'info> {
         init,
         payer = authority,
         space = Config::LEN,
-        seeds = [b"config"],
+        seeds = [CONFIG_SEED],
         bump
     )]
     pub config: Account<'info, Config>,
@@ -250,7 +253,7 @@ pub struct CreateMarket<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    #[account(seeds = [b"config"], bump)]
+    #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
     #[account(
@@ -294,7 +297,7 @@ pub struct AddOutcome<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    #[account(seeds = [b"config"], bump)]
+    #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
     #[account(mut)]
@@ -321,7 +324,7 @@ pub struct FinalizeSeeding<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    #[account(seeds = [b"config"], bump)]
+    #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
     #[account(mut)]
@@ -346,7 +349,7 @@ pub struct PlaceBet<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
-    #[account(seeds = [b"config"], bump)]
+    #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
     #[account(mut)]
@@ -384,7 +387,7 @@ pub struct LockMarket<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    #[account(seeds = [b"config"], bump)]
+    #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
     #[account(mut)]
@@ -404,7 +407,7 @@ pub struct ResolveMarket<'info> {
     #[account(mut)]
     pub oracle: Signer<'info>,
 
-    #[account(seeds = [b"config"], bump)]
+    #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
     #[account(mut)]
@@ -427,7 +430,7 @@ pub struct VoidMarket<'info> {
     #[account(mut)]
     pub oracle: Signer<'info>,
 
-    #[account(seeds = [b"config"], bump)]
+    #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
     #[account(mut)]
