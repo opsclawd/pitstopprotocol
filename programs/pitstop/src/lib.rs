@@ -208,6 +208,7 @@ mod handlers {
         emit!(anchor_events::OutcomeAdded {
             market: ctx.accounts.market.key(),
             outcome_id: evt.outcome_id,
+            outcome_count: evt.outcome_count,
             timestamp: now_ts,
         });
 

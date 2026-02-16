@@ -26,6 +26,7 @@ pub struct MarketCreated {
 pub struct OutcomeAdded {
     pub market: Pubkey,
     pub outcome_id: u8,
+    pub outcome_count: u8,
     pub timestamp: i64,
 }
 
