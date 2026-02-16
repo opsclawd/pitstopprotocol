@@ -206,6 +206,8 @@ mod tests {
                 user: "UserA".to_string(),
                 outcome_id: 1,
                 amount: 200,
+                claimed: false,
+                payout: 0,
             },
         }
     }

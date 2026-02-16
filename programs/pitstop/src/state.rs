@@ -53,4 +53,8 @@ pub struct Position {
     pub user: String,
     pub outcome_id: u8,
     pub amount: u64,
+    /// Tracks whether the position has been claimed via claim_resolved/claim_voided.
+    pub claimed: bool,
+    /// Payout recorded at claim time (base units). For resolved losers this is 0.
+    pub payout: u64,
 }
