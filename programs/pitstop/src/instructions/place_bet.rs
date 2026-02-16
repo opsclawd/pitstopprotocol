@@ -55,21 +55,29 @@ fn validate_place_bet_preconditions(input: &PlaceBetInput) -> Result<(), PitStop
         return Err(PitStopError::InvalidTokenProgram);
     }
 
+    // Checked math first so overflow maps deterministically to Overflow.
+    let next_market_total = input
+        .market_total_pool
+        .checked_add(input.amount)
+        .ok_or(PitStopError::Overflow)?;
+    if next_market_total > input.max_total_pool_per_market {
+        return Err(PitStopError::MarketCapExceeded);
+    }
+
+    let next_user_pos = input
+        .user_position_amount
+        .checked_add(input.amount)
+        .ok_or(PitStopError::Overflow)?;
+    if next_user_pos > input.max_bet_per_user_per_market {
+        return Err(PitStopError::UserBetCapExceeded);
+    }
+
+    // Outcome existence / relation checks.
     if !input.outcome_pool_exists
         || input.outcome_pool_market != input.market
         || input.outcome_pool_outcome_id != input.outcome_id
     {
         return Err(PitStopError::OutcomeMismatch);
-    }
-
-    let next_market_total = input.market_total_pool.saturating_add(input.amount);
-    if next_market_total > input.max_total_pool_per_market {
-        return Err(PitStopError::MarketCapExceeded);
-    }
-
-    let next_user_pos = input.user_position_amount.saturating_add(input.amount);
-    if next_user_pos > input.max_bet_per_user_per_market {
-        return Err(PitStopError::UserBetCapExceeded);
     }
 
     Ok(())
@@ -80,10 +88,10 @@ pub fn place_bet(
 ) -> Result<(Market, OutcomePool, Position, u64, BetPlaced), PitStopError> {
     validate_place_bet_preconditions(&input)?;
 
-    let market_total_pool = input.market_total_pool + input.amount;
-    let outcome_pool_amount = input.outcome_pool_amount + input.amount;
-    let position_amount = input.user_position_amount + input.amount;
-    let vault_amount = input.vault_amount + input.amount;
+    let market_total_pool = input.market_total_pool.checked_add(input.amount).ok_or(PitStopError::Overflow)?;
+    let outcome_pool_amount = input.outcome_pool_amount.checked_add(input.amount).ok_or(PitStopError::Overflow)?;
+    let position_amount = input.user_position_amount.checked_add(input.amount).ok_or(PitStopError::Overflow)?;
+    let vault_amount = input.vault_amount.checked_add(input.amount).ok_or(PitStopError::Overflow)?;
 
     let mut market = input.market_state;
     market.total_pool = market_total_pool;
@@ -219,4 +227,25 @@ mod tests {
         bad.token_program = "TokenzFake".to_string();
         assert_eq!(place_bet(bad).unwrap_err(), PitStopError::InvalidTokenProgram);
     }
+
+    #[test]
+    fn pbt_rej_wrong_outcome_relation_cases() {
+        let mut bad = base_input();
+        bad.outcome_pool_market = "OtherMarket".to_string();
+        assert_eq!(place_bet(bad).unwrap_err(), PitStopError::OutcomeMismatch);
+
+        let mut bad = base_input();
+        bad.outcome_pool_outcome_id = 2;
+        assert_eq!(place_bet(bad).unwrap_err(), PitStopError::OutcomeMismatch);
+    }
+
+    #[test]
+    fn pbt_rej_overflow_maps_to_overflow() {
+        let mut bad = base_input();
+        bad.market_total_pool = u64::MAX;
+        bad.amount = 1;
+        bad.max_total_pool_per_market = u64::MAX;
+        assert_eq!(place_bet(bad).unwrap_err(), PitStopError::Overflow);
+    }
+
 }

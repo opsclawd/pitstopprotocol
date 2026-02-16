@@ -26,4 +26,5 @@ pub enum PitStopError {
     ZeroAmount,
     MarketCapExceeded,
     UserBetCapExceeded,
+    Overflow,
 }
