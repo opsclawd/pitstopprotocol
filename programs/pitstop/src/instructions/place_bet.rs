@@ -45,24 +45,31 @@ pub struct PlaceBetInput {
 
 fn validate_place_bet_preconditions(input: &PlaceBetInput) -> Result<(), PitStopError> {
     // Order mirrors locked precondition contract to keep deterministic error behavior.
+    // PBT-REJ-001: protocol-level circuit breaker; betting must halt when paused.
     if input.config_paused {
         return Err(PitStopError::ProtocolPaused);
     }
+    // PBT-REJ-002: place_bet is only valid in Open lifecycle state.
     if input.market_status != MarketStatus::Open {
         return Err(PitStopError::MarketNotOpen);
     }
+    // PBT-REJ-003: betting window closes at lock timestamp (inclusive cutoff).
     if input.now_ts >= input.market_lock_timestamp {
         return Err(PitStopError::BettingClosed);
     }
+    // PBT-REJ-004: MVP outcome_id domain is fixed to u8 subset [0, 99].
     if input.outcome_id > 99 {
         return Err(PitStopError::InvalidOutcomeId);
     }
+    // PBT-REJ-005: market must be fully seeded before accepting bets.
     if input.market_outcome_count != input.market_max_outcomes {
         return Err(PitStopError::MarketNotReady);
     }
+    // PBT-REJ-006: zero-value bets are explicitly forbidden.
     if input.amount == 0 {
         return Err(PitStopError::ZeroAmount);
     }
+    // PBT-REJ-010: token program must stay pinned to configured SPL Token v1.
     if input.token_program != REQUIRED_TOKEN_PROGRAM {
         return Err(PitStopError::InvalidTokenProgram);
     }
@@ -73,6 +80,7 @@ fn validate_place_bet_preconditions(input: &PlaceBetInput) -> Result<(), PitStop
         .market_total_pool
         .checked_add(input.amount)
         .ok_or(PitStopError::Overflow)?;
+    // PBT-REJ-007: reject bets that would exceed market-level total cap.
     if next_market_total > input.max_total_pool_per_market {
         return Err(PitStopError::MarketCapExceeded);
     }
@@ -81,12 +89,15 @@ fn validate_place_bet_preconditions(input: &PlaceBetInput) -> Result<(), PitStop
         .user_position_amount
         .checked_add(input.amount)
         .ok_or(PitStopError::Overflow)?;
+    // PBT-REJ-008: reject bets that would exceed per-user cap for this market.
     if next_user_pos > input.max_bet_per_user_per_market {
         return Err(PitStopError::UserBetCapExceeded);
     }
 
     // Outcome existence + relation checks (spec requires deterministic OutcomeMismatch
     // for wrong relation and modeled missing/uninitialized cases in this parity layer).
+    // PBT-REJ-009: wrong PDA relation OR modeled missing/uninitialized pool both map to OutcomeMismatch
+    // in this deterministic parity layer.
     if !input.outcome_pool_exists
         || input.outcome_pool_market != input.market
         || input.outcome_pool_outcome_id != input.outcome_id
