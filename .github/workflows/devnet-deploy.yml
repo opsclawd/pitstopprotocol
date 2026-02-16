@@ -1,0 +1,52 @@
+name: devnet-deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_smoke_only:
+        description: "Skip deploy and run smoke checks only"
+        required: false
+        default: "false"
+
+jobs:
+  devnet-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Install Anchor CLI
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm install 0.30.1
+          avm use 0.30.1
+          echo "$HOME/.avm/bin" >> "$GITHUB_PATH"
+
+      - name: Install JS deps
+        run: npm ci --ignore-scripts
+
+      - name: Sync/check program IDs
+        run: node scripts/devnet/apply_program_ids.js --check
+
+      - name: Deploy + smoke (devnet)
+        if: ${{ inputs.run_smoke_only != 'true' }}
+        env:
+          DEVNET_WALLET_JSON_B64: ${{ secrets.SOLANA_DEVNET_KEYPAIR_B64 }}
+        run: scripts/devnet/deploy.sh
+
+      - name: Smoke only (devnet)
+        if: ${{ inputs.run_smoke_only == 'true' }}
+        env:
+          DEVNET_WALLET_JSON_B64: ${{ secrets.SOLANA_DEVNET_KEYPAIR_B64 }}
+        run: scripts/devnet/smoke.sh
