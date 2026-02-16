@@ -33,3 +33,14 @@ pub struct MarketOpened {
     pub market: String,
     pub timestamp: i64,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BetPlaced {
+    pub market: String,
+    pub user: String,
+    pub outcome_id: u8,
+    pub amount: u64,
+    pub market_total_pool: u64,
+    pub outcome_pool_amount: u64,
+    pub timestamp: i64,
+}
