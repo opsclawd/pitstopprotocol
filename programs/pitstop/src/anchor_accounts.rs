@@ -8,6 +8,12 @@ use crate::state as parity_state;
 
 /// Canonical PDA seed for the singleton Config account.
 pub const CONFIG_SEED: &[u8] = b"config";
+/// Canonical PDA seed for Market accounts.
+pub const MARKET_SEED: &[u8] = b"market";
+/// Canonical PDA seed for OutcomePool accounts.
+pub const OUTCOME_SEED: &[u8] = b"outcome";
+/// Canonical PDA seed for Position accounts.
+pub const POSITION_SEED: &[u8] = b"position";
 
 /// Canonical protocol configuration PDA (`seeds = ["config"]`).
 ///
@@ -260,7 +266,7 @@ pub struct CreateMarket<'info> {
         init,
         payer = authority,
         space = Market::LEN,
-        seeds = [b"market", args.market_id.as_ref()],
+        seeds = [MARKET_SEED, args.market_id.as_ref()],
         bump
     )]
     pub market: Account<'info, Market>,
@@ -307,7 +313,7 @@ pub struct AddOutcome<'info> {
         init,
         payer = authority,
         space = OutcomePool::LEN,
-        seeds = [b"outcome", market.key().as_ref(), &[args.outcome_id]],
+        seeds = [OUTCOME_SEED, market.key().as_ref(), &[args.outcome_id]],
         bump
     )]
     pub outcome_pool: Account<'info, OutcomePool>,
@@ -363,7 +369,7 @@ pub struct PlaceBet<'info> {
         init_if_needed,
         payer = user,
         space = Position::LEN,
-        seeds = [b"position", market.key().as_ref(), user.key().as_ref(), &[args.outcome_id]],
+        seeds = [POSITION_SEED, market.key().as_ref(), user.key().as_ref(), &[args.outcome_id]],
         bump
     )]
     pub position: Account<'info, Position>,
