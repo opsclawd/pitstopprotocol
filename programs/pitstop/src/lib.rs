@@ -80,6 +80,7 @@ pub mod pitstop {
 
 mod handlers {
     use super::*;
+
     use std::str::FromStr;
 
     use anchor_spl::token_interface::{
@@ -134,17 +135,15 @@ mod handlers {
 
         Ok(pool)
     }
-
     pub fn initialize(ctx: Context<Initialize>, args: InitializeArgs) -> Result<()> {
         // Layer 1 validation (Anchor handler level):
         // perform explicit protocol-mapped guards before invoking parity logic.
         //
         // We intentionally map to PitStopAnchorError here so callers see the same
         // deterministic error taxonomy expected by LOCKED specs.
-        let required_token_program = required_token_program_pubkey()?;
         require_keys_eq!(
             ctx.accounts.token_program.key(),
-            required_token_program,
+            constants::REQUIRED_TOKEN_PROGRAM_ID,
             PitStopAnchorError::InvalidTokenProgram
         );
 
@@ -195,7 +194,7 @@ mod handlers {
         config.max_total_pool_per_market = cfg.max_total_pool_per_market;
         config.max_bet_per_user_per_market = cfg.max_bet_per_user_per_market;
         config.claim_window_secs = cfg.claim_window_secs;
-        config.token_program = required_token_program;
+        config.token_program = constants::REQUIRED_TOKEN_PROGRAM_ID;
 
         // Event emission:
         // emit after successful state write so off-chain observers see committed transitions.
@@ -218,6 +217,8 @@ mod handlers {
             ctx.accounts.config.token_program,
             PitStopAnchorError::InvalidTokenProgram
         );
+        // Taxonomy note: current LOCKED error surface reuses InvalidTreasuryMint
+        // for config-usdc mint mismatches at this boundary.
         require_keys_eq!(ctx.accounts.usdc_mint.key(), ctx.accounts.config.usdc_mint, PitStopAnchorError::InvalidTreasuryMint);
 
         // Build parity input from Anchor accounts/args.
