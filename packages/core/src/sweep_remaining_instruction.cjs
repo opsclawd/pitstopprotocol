@@ -15,6 +15,8 @@ function validateSweepRemainingInput(input) {
   if (input.nowTs <= claimWindowEnd) return 'ClaimWindowNotExpired';
 
   // Treasury constraints (mint + owner) must match config.
+  // treasury account must match configured treasury address
+  if (input.treasury !== input.configTreasury) return 'InvalidTreasuryOwner';
   if (input.treasuryMint !== input.usdcMint) return 'InvalidTreasuryMint';
   if (input.treasuryOwner !== input.treasuryAuthority) return 'InvalidTreasuryOwner';
 

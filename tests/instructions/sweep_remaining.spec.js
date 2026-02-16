@@ -13,6 +13,7 @@ const { validateSweepRemainingInput } = require('../../packages/core/src/sweep_r
     vaultAmount: 123,
     treasuryAmount: 1000,
     treasury: 'TreasuryA',
+    configTreasury: 'TreasuryA',
     treasuryMint: 'MintA',
     usdcMint: 'MintA',
     treasuryOwner: 'TreasuryAuthA',
@@ -37,6 +38,7 @@ const { validateSweepRemainingInput } = require('../../packages/core/src/sweep_r
   assert.equal(validateSweepRemainingInput({ ...base, nowTs: claimEnd }), 'ClaimWindowNotExpired');
 
   // SWP-REJ-004 treasury constraints
+  assert.equal(validateSweepRemainingInput({ ...base, configTreasury: 'OtherTreasury' }), 'InvalidTreasuryOwner');
   assert.equal(validateSweepRemainingInput({ ...base, treasuryMint: 'OtherMint' }), 'InvalidTreasuryMint');
   assert.equal(validateSweepRemainingInput({ ...base, treasuryOwner: 'OtherOwner' }), 'InvalidTreasuryOwner');
 

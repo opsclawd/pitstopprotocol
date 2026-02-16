@@ -18,6 +18,7 @@ const { invokeSweepRemainingOnProgram } = require('../harness/sweep_remaining_ad
     vaultAmount: 123,
     treasuryAmount: 1000,
     treasury: 'TreasuryA',
+    configTreasury: 'TreasuryA',
     treasuryMint: 'MintA',
     usdcMint: 'MintA',
     treasuryOwner: 'TreasuryAuthA',
@@ -50,6 +51,7 @@ const { invokeSweepRemainingOnProgram } = require('../harness/sweep_remaining_ad
     [{ authority: 'Other' }, 'Unauthorized'],
     [{ marketStatus: 'Open' }, 'MarketNotResolved'],
     [{ nowTs: resolutionTimestamp + claimWindowSecs }, 'ClaimWindowNotExpired'],
+    [{ configTreasury: 'OtherTreasury' }, 'InvalidTreasuryOwner'],
     [{ treasuryMint: 'OtherMint' }, 'InvalidTreasuryMint'],
     [{ treasuryOwner: 'OtherOwner' }, 'InvalidTreasuryOwner'],
   ];
