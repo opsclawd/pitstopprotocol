@@ -306,7 +306,11 @@ pub struct AddOutcome<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 
     #[account(
@@ -333,7 +337,11 @@ pub struct FinalizeSeeding<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 }
 
@@ -358,7 +366,11 @@ pub struct PlaceBet<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 
     /// CHECK: validated/decoded in handler so missing/wrong relation can map to OutcomeMismatch.
@@ -396,7 +408,11 @@ pub struct LockMarket<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 }
 
@@ -416,7 +432,11 @@ pub struct ResolveMarket<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 
     /// CHECK: validated/decoded in handler so missing/wrong relation can map to OutcomeMismatch.
@@ -439,7 +459,11 @@ pub struct VoidMarket<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 }
 
@@ -458,7 +482,11 @@ pub struct ClaimResolved<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 
     #[account(
@@ -498,7 +526,11 @@ pub struct ClaimVoided<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 
     #[account(
@@ -532,7 +564,11 @@ pub struct SweepRemaining<'info> {
     )]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 
     #[account(mut)]
@@ -559,7 +595,11 @@ pub struct CancelMarket<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 
     #[account(mut)]

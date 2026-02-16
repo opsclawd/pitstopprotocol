@@ -330,7 +330,7 @@ mod handlers {
 
         // Load/validate outcome_pool with spec-mapped error behavior.
         let expected_pool = Pubkey::find_program_address(
-            &[b"outcome", ctx.accounts.market.key().as_ref(), &[args.outcome_id]],
+            &[OUTCOME_SEED, ctx.accounts.market.key().as_ref(), &[args.outcome_id]],
             &crate::id(),
         )
         .0;
@@ -461,7 +461,7 @@ mod handlers {
         let now_ts = clock_unix_timestamp()?;
 
         let expected_pool = Pubkey::find_program_address(
-            &[b"outcome", ctx.accounts.market.key().as_ref(), &[args.winning_outcome_id]],
+            &[OUTCOME_SEED, ctx.accounts.market.key().as_ref(), &[args.winning_outcome_id]],
             &crate::id(),
         )
         .0;
