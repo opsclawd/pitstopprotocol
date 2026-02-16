@@ -100,6 +100,41 @@ mod handlers {
             .map_err(|_| error!(PitStopAnchorError::InvalidTokenProgram))
     }
 
+    /// Canonical OutcomePool loader used by all handlers that need deterministic
+    /// `OutcomeMismatch` mapping for missing/wrong/malformed pool accounts.
+    fn load_outcome_pool_checked(
+        pool_account: &AccountInfo,
+        market: Pubkey,
+        outcome_id: u8,
+    ) -> Result<OutcomePool> {
+        let expected_pool = Pubkey::find_program_address(
+            &[OUTCOME_SEED, market.as_ref(), &[outcome_id]],
+            &crate::id(),
+        )
+        .0;
+        if pool_account.key() != expected_pool {
+            return Err(error!(PitStopAnchorError::OutcomeMismatch));
+        }
+        if pool_account.owner != &crate::id() {
+            return Err(error!(PitStopAnchorError::OutcomeMismatch));
+        }
+
+        let data_ref = pool_account.try_borrow_data()?;
+        if data_ref.len() < 8 {
+            return Err(error!(PitStopAnchorError::OutcomeMismatch));
+        }
+
+        let mut slice: &[u8] = &data_ref;
+        let pool = OutcomePool::try_deserialize(&mut slice)
+            .map_err(|_| error!(PitStopAnchorError::OutcomeMismatch))?;
+
+        if pool.market != market || pool.outcome_id != outcome_id {
+            return Err(error!(PitStopAnchorError::OutcomeMismatch));
+        }
+
+        Ok(pool)
+    }
+
     pub fn initialize(ctx: Context<Initialize>, args: InitializeArgs) -> Result<()> {
         // Layer 1 validation (Anchor handler level):
         // perform explicit protocol-mapped guards before invoking parity logic.
@@ -334,30 +369,12 @@ mod handlers {
             PitStopAnchorError::Unauthorized
         );
 
-        // Load/validate outcome_pool with spec-mapped error behavior.
-        let expected_pool = Pubkey::find_program_address(
-            &[OUTCOME_SEED, ctx.accounts.market.key().as_ref(), &[args.outcome_id]],
-            &crate::id(),
-        )
-        .0;
-        if ctx.accounts.outcome_pool.key() != expected_pool {
-            return Err(error!(PitStopAnchorError::OutcomeMismatch));
-        }
-        if ctx.accounts.outcome_pool.owner != &crate::id() {
-            return Err(error!(PitStopAnchorError::OutcomeMismatch));
-        }
-        let mut outcome_pool: OutcomePool = {
-            let data_ref = ctx.accounts.outcome_pool.try_borrow_data()?;
-            if data_ref.is_empty() {
-                return Err(error!(PitStopAnchorError::OutcomeMismatch));
-            }
-            let mut slice: &[u8] = &data_ref;
-            OutcomePool::try_deserialize(&mut slice)
-                .map_err(|_| error!(PitStopAnchorError::OutcomeMismatch))?
-        };
-        if outcome_pool.market != ctx.accounts.market.key() || outcome_pool.outcome_id != args.outcome_id {
-            return Err(error!(PitStopAnchorError::OutcomeMismatch));
-        }
+        // Load/validate outcome_pool with spec-mapped deterministic behavior.
+        let mut outcome_pool = load_outcome_pool_checked(
+            &ctx.accounts.outcome_pool,
+            ctx.accounts.market.key(),
+            args.outcome_id,
+        )?;
 
         // Initialize position metadata on first creation.
         if ctx.accounts.position.market == Pubkey::default() {
@@ -466,26 +483,11 @@ mod handlers {
     pub fn resolve_market(ctx: Context<ResolveMarket>, args: ResolveMarketArgs) -> Result<()> {
         let now_ts = clock_unix_timestamp()?;
 
-        let expected_pool = Pubkey::find_program_address(
-            &[OUTCOME_SEED, ctx.accounts.market.key().as_ref(), &[args.winning_outcome_id]],
-            &crate::id(),
-        )
-        .0;
-        if ctx.accounts.winning_outcome_pool.key() != expected_pool {
-            return Err(error!(PitStopAnchorError::OutcomeMismatch));
-        }
-        if ctx.accounts.winning_outcome_pool.owner != &crate::id() {
-            return Err(error!(PitStopAnchorError::OutcomeMismatch));
-        }
-        let winning_pool: OutcomePool = {
-            let data_ref = ctx.accounts.winning_outcome_pool.try_borrow_data()?;
-            if data_ref.is_empty() {
-                return Err(error!(PitStopAnchorError::OutcomeMismatch));
-            }
-            let mut slice: &[u8] = &data_ref;
-            OutcomePool::try_deserialize(&mut slice)
-                .map_err(|_| error!(PitStopAnchorError::OutcomeMismatch))?
-        };
+        let winning_pool = load_outcome_pool_checked(
+            &ctx.accounts.winning_outcome_pool,
+            ctx.accounts.market.key(),
+            args.winning_outcome_id,
+        )?;
 
         let market_state = ctx.accounts.market.to_parity();
         let input = instructions::resolve_market::ResolveMarketInput {
@@ -569,29 +571,11 @@ mod handlers {
             PitStopAnchorError::Unauthorized
         );
 
-        let expected_pool = Pubkey::find_program_address(
-            &[OUTCOME_SEED, ctx.accounts.market.key().as_ref(), &[args.outcome_id]],
-            &crate::id(),
-        )
-        .0;
-        if ctx.accounts.outcome_pool.key() != expected_pool {
-            return Err(error!(PitStopAnchorError::OutcomeMismatch));
-        }
-        if ctx.accounts.outcome_pool.owner != &crate::id() {
-            return Err(error!(PitStopAnchorError::OutcomeMismatch));
-        }
-        let outcome_pool: OutcomePool = {
-            let data_ref = ctx.accounts.outcome_pool.try_borrow_data()?;
-            if data_ref.is_empty() {
-                return Err(error!(PitStopAnchorError::OutcomeMismatch));
-            }
-            let mut slice: &[u8] = &data_ref;
-            OutcomePool::try_deserialize(&mut slice)
-                .map_err(|_| error!(PitStopAnchorError::OutcomeMismatch))?
-        };
-        if outcome_pool.market != ctx.accounts.market.key() || outcome_pool.outcome_id != args.outcome_id {
-            return Err(error!(PitStopAnchorError::OutcomeMismatch));
-        }
+        let outcome_pool = load_outcome_pool_checked(
+            &ctx.accounts.outcome_pool,
+            ctx.accounts.market.key(),
+            args.outcome_id,
+        )?;
 
         let now_ts = clock_unix_timestamp()?;
         let market_state = ctx.accounts.market.to_parity();
