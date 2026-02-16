@@ -95,15 +95,21 @@ mod handlers {
         Ok(Clock::get()?.unix_timestamp)
     }
 
+    fn required_token_program_pubkey() -> Result<Pubkey> {
+        Pubkey::from_str(constants::REQUIRED_TOKEN_PROGRAM)
+            .map_err(|_| error!(PitStopAnchorError::InvalidTokenProgram))
+    }
+
     pub fn initialize(ctx: Context<Initialize>, args: InitializeArgs) -> Result<()> {
         // Layer 1 validation (Anchor handler level):
         // perform explicit protocol-mapped guards before invoking parity logic.
         //
         // We intentionally map to PitStopAnchorError here so callers see the same
         // deterministic error taxonomy expected by LOCKED specs.
+        let required_token_program = required_token_program_pubkey()?;
         require_keys_eq!(
             ctx.accounts.token_program.key(),
-            Pubkey::from_str(constants::REQUIRED_TOKEN_PROGRAM).unwrap(),
+            required_token_program,
             PitStopAnchorError::InvalidTokenProgram
         );
 
@@ -154,7 +160,7 @@ mod handlers {
         config.max_total_pool_per_market = cfg.max_total_pool_per_market;
         config.max_bet_per_user_per_market = cfg.max_bet_per_user_per_market;
         config.claim_window_secs = cfg.claim_window_secs;
-        config.token_program = Pubkey::from_str(constants::REQUIRED_TOKEN_PROGRAM).unwrap();
+        config.token_program = required_token_program;
 
         // Event emission:
         // emit after successful state write so off-chain observers see committed transitions.

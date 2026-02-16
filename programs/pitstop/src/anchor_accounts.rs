@@ -557,11 +557,7 @@ pub struct SweepRemaining<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    #[account(
-        seeds = [CONFIG_SEED],
-        bump,
-        constraint = config.treasury == treasury.key() @ crate::anchor_errors::PitStopAnchorError::InvalidTreasuryOwner,
-    )]
+    #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
     #[account(
