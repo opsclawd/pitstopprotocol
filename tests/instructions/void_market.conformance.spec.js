@@ -35,8 +35,10 @@ const { invokeVoidMarketOnProgram } = require('../harness/void_market_adapter');
   // VDM-REJ-001..003
   const cases = [
     [{ oracle: 'Other' }, 'UnauthorizedOracle'],
-    [{ marketStatus: 'Open' }, 'MarketNotLocked'],
-    [{ marketStatus: 'Resolved' }, 'MarketNotLocked'],
+    [{ marketState: { ...base.marketState, status: 'Open' } }, 'MarketNotLocked'],
+    // mirrored field mismatch: canonical marketState.status governs
+    [{ marketStatus: 'Locked', marketState: { ...base.marketState, status: 'Open' } }, 'MarketNotLocked'],
+    [{ marketState: { ...base.marketState, status: 'Resolved' } }, 'MarketNotLocked'],
   ];
   for (const [patch, expected] of cases) {
     const out = await invokeVoidMarketOnProgram({ ...base, ...patch });

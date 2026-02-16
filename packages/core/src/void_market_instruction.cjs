@@ -3,7 +3,8 @@ function validateVoidMarketInput(input) {
   if (input.oracle !== input.configOracle) return 'UnauthorizedOracle';
 
   // VDM-REJ-002/003: only Locked markets can transition to Voided.
-  if (input.marketStatus !== 'Locked') return 'MarketNotLocked';
+  // Use canonical market state as source-of-truth for lifecycle checks.
+  if (input.marketState.status !== 'Locked') return 'MarketNotLocked';
 
   return null;
 }

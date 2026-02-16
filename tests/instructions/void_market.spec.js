@@ -6,12 +6,13 @@ const { validateVoidMarketInput } = require('../../packages/core/src/void_market
     oracle: 'OracleA',
     configOracle: 'OracleA',
     marketStatus: 'Locked',
+    marketState: { status: 'Locked' },
   };
 
   assert.equal(validateVoidMarketInput(base), null);
   assert.equal(validateVoidMarketInput({ ...base, oracle: 'Other' }), 'UnauthorizedOracle');
-  assert.equal(validateVoidMarketInput({ ...base, marketStatus: 'Open' }), 'MarketNotLocked');
-  assert.equal(validateVoidMarketInput({ ...base, marketStatus: 'Resolved' }), 'MarketNotLocked');
+  assert.equal(validateVoidMarketInput({ ...base, marketState: { ...base.marketState, status: 'Open' } }), 'MarketNotLocked');
+  assert.equal(validateVoidMarketInput({ ...base, marketState: { ...base.marketState, status: 'Resolved' } }), 'MarketNotLocked');
 
   console.log('void_market spec tests ok');
 })();
