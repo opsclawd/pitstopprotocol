@@ -26,10 +26,7 @@ pub struct SweepRemainingInput {
     pub config_authority: String,
 
     pub market: String,
-    pub market_status: MarketStatus,
-
     pub now_ts: i64,
-    pub resolution_timestamp: i64,
     pub claim_window_secs: i64,
 
     pub token_program: String,
@@ -61,13 +58,15 @@ fn validate_sweep_remaining_preconditions(input: &SweepRemainingInput) -> Result
     }
 
     // SWP-REJ-002: market must be in {Resolved, Voided}. (Includes Swept -> deterministic gate)
-    if input.market_status != MarketStatus::Resolved && input.market_status != MarketStatus::Voided
+    if input.market_state.status != MarketStatus::Resolved
+        && input.market_state.status != MarketStatus::Voided
     {
         return Err(PitStopError::MarketNotResolved);
     }
 
     // SWP-WIN-001: claim window must be expired.
     let claim_window_end = input
+        .market_state
         .resolution_timestamp
         .checked_add(input.claim_window_secs)
         .ok_or(PitStopError::Overflow)?;
@@ -161,17 +160,15 @@ mod tests {
     }
 
     fn base_input() -> SweepRemainingInput {
-        let resolution_timestamp = 1_800_000_000;
         let claim_window_secs = 5000;
+        let resolution_timestamp = 1_800_000_000;
         let now_ts = resolution_timestamp + claim_window_secs + 1;
 
         SweepRemainingInput {
             authority: "AuthA".to_string(),
             config_authority: "AuthA".to_string(),
             market: "MarketA".to_string(),
-            market_status: MarketStatus::Resolved,
             now_ts,
-            resolution_timestamp,
             claim_window_secs,
             token_program: REQUIRED_TOKEN_PROGRAM.to_string(),
             treasury: "TreasuryA".to_string(),
@@ -216,14 +213,22 @@ mod tests {
 
         // SWP-REJ-002 status gate (incl Swept deterministic)
         let mut bad = base_input();
-        bad.market_status = MarketStatus::Open;
+        bad.market_state.status = MarketStatus::Open;
         assert_eq!(
             sweep_remaining(bad).unwrap_err(),
             PitStopError::MarketNotResolved
         );
 
         let mut bad = base_input();
-        bad.market_status = MarketStatus::Swept;
+        bad.market_state.status = MarketStatus::Swept;
+        assert_eq!(
+            sweep_remaining(bad).unwrap_err(),
+            PitStopError::MarketNotResolved
+        );
+
+        // Canonical source-of-truth: market_state governs status and resolution timestamp.
+        let mut bad = base_input();
+        bad.market_state.status = MarketStatus::Swept;
         assert_eq!(
             sweep_remaining(bad).unwrap_err(),
             PitStopError::MarketNotResolved
@@ -231,7 +236,7 @@ mod tests {
 
         // SWP-WIN-001 claim window not expired
         let mut bad = base_input();
-        let claim_end = bad.resolution_timestamp + bad.claim_window_secs;
+        let claim_end = bad.market_state.resolution_timestamp + bad.claim_window_secs;
         bad.now_ts = claim_end;
         assert_eq!(
             sweep_remaining(bad).unwrap_err(),
