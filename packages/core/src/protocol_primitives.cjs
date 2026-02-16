@@ -46,12 +46,12 @@ function computePrizePool(totalPool, feeBps) {
   return totalPool - computeFee(totalPool, feeBps);
 }
 
-function computePayout(stakeAmount, prizePool, winnerPool) {
-  if (!Number.isInteger(stakeAmount) || stakeAmount < 0) throw new Error('InvalidPositionAmount');
+function computePayout(positionAmount, prizePool, winnerPool) {
+  if (!Number.isInteger(positionAmount) || positionAmount < 0) throw new Error('InvalidPositionAmount');
   if (!Number.isInteger(prizePool) || prizePool < 0) throw new Error('InvalidPrizePool');
   if (!Number.isInteger(winnerPool) || winnerPool < 0) throw new Error('InvalidWinnerPool');
   if (winnerPool === 0) throw new Error('DivisionByZero');
-  return Math.floor((stakeAmount * prizePool) / winnerPool);
+  return Math.floor((positionAmount * prizePool) / winnerPool);
 }
 
 module.exports = {
