@@ -51,6 +51,7 @@ const { invokeSweepRemainingOnProgram } = require('../harness/sweep_remaining_ad
     [{ marketStatus: 'Open' }, 'MarketNotResolved'],
     [{ nowTs: resolutionTimestamp + claimWindowSecs }, 'ClaimWindowNotExpired'],
     [{ treasuryMint: 'OtherMint' }, 'InvalidTreasuryMint'],
+    [{ treasuryOwner: 'OtherOwner' }, 'InvalidTreasuryOwner'],
   ];
   for (const [patch, expected] of rejCases) {
     const out = await invokeSweepRemainingOnProgram({ ...base, ...patch });
