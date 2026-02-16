@@ -11,8 +11,8 @@ function validateCancelMarketInput(input) {
   // CNL-REJ-003: cancel allowed strictly before lockTimestamp.
   if (input.nowTs >= input.lockTimestamp) return 'TooLateToCancel';
 
-  // CNL-REJ-004: market must have no bets.
-  if (input.marketTotalPool !== 0) return 'MarketHasBets';
+  // CNL-REJ-004: market must have no bets (canonical source: market account state).
+  if (input.marketState.totalPool !== 0) return 'MarketHasBets';
 
   // CNL-REJ-005: vault must be empty before close.
   if (input.vaultAmount !== 0) return 'VaultNotEmpty';

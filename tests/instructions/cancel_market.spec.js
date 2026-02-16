@@ -10,6 +10,7 @@ const { validateCancelMarketInput } = require('../../packages/core/src/cancel_ma
     nowTs: 1_799_999_999,
     lockTimestamp: 1_800_000_000,
     vaultAmount: 0,
+    marketState: { totalPool: 0 },
   };
 
   assert.equal(validateCancelMarketInput(base), null);
@@ -18,9 +19,10 @@ const { validateCancelMarketInput } = require('../../packages/core/src/cancel_ma
   assert.equal(validateCancelMarketInput({ ...base, authority: 'Other' }), 'Unauthorized');
   assert.equal(validateCancelMarketInput({ ...base, marketStatus: 'Open' }), 'MarketNotSeeding');
   assert.equal(validateCancelMarketInput({ ...base, nowTs: base.lockTimestamp }), 'TooLateToCancel');
-  assert.equal(validateCancelMarketInput({ ...base, marketTotalPool: 1 }), 'MarketHasBets');
   assert.equal(validateCancelMarketInput({ ...base, vaultAmount: 1 }), 'VaultNotEmpty');
   assert.equal(validateCancelMarketInput({ ...base, marketState: { ...base.marketState, totalPool: 1 } }), 'MarketHasBets');
+  // mirrored marketTotalPool is ignored; canonical marketState.totalPool governs
+  assert.equal(validateCancelMarketInput({ ...base, marketTotalPool: 999, marketState: { ...base.marketState, totalPool: 0 } }), null);
 
   // CNL-ADV-001
   assert.equal(validateCancelMarketInput({ ...base, closeDestination: 'Other' }), 'Unauthorized');
