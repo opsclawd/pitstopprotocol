@@ -43,8 +43,11 @@ const { invokeResolveMarketOnProgram } = require('../harness/resolve_market_adap
     [{ oracle: 'Other' }, 'UnauthorizedOracle'],
     [{ marketStatus: 'Open' }, 'MarketNotLocked'],
     [{ winningOutcomeId: 100 }, 'InvalidOutcomeId'],
+    // RSM-REJ-004: winning outcome must exist in seeded outcomes.
+    [{ winningOutcomeId: base.marketOutcomeCount }, 'InvalidOutcomeId'],
     // Wrong PDA passed (relation mismatch) -> OutcomeMismatch.
     [{ winningOutcomePoolOutcomeId: 2 }, 'OutcomeMismatch'],
+    [{ winningOutcomePoolMarket: 'OtherMarket' }, 'OutcomeMismatch'],
   ];
   for (const [patch, expected] of cases) {
     const out = await invokeResolveMarketOnProgram({ ...base, ...patch });
