@@ -29,6 +29,8 @@ pub enum PitStopError {
     ClaimWindowNotExpired,
 
     InvalidOutcomeId,
+    ZeroOutcomes,
+    TooManyOutcomes,
     MaxOutcomesReached,
     OutcomeMismatch,
     SeedingIncomplete,
