@@ -250,6 +250,7 @@ pub struct CreateMarket<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
+    #[account(seeds = [b"config"], bump)]
     pub config: Account<'info, Config>,
 
     #[account(
@@ -293,6 +294,7 @@ pub struct AddOutcome<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
+    #[account(seeds = [b"config"], bump)]
     pub config: Account<'info, Config>,
 
     #[account(mut)]
@@ -319,6 +321,7 @@ pub struct FinalizeSeeding<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
+    #[account(seeds = [b"config"], bump)]
     pub config: Account<'info, Config>,
 
     #[account(mut)]
@@ -343,6 +346,7 @@ pub struct PlaceBet<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
+    #[account(seeds = [b"config"], bump)]
     pub config: Account<'info, Config>,
 
     #[account(mut)]
@@ -380,6 +384,7 @@ pub struct LockMarket<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
+    #[account(seeds = [b"config"], bump)]
     pub config: Account<'info, Config>,
 
     #[account(mut)]
@@ -399,6 +404,7 @@ pub struct ResolveMarket<'info> {
     #[account(mut)]
     pub oracle: Signer<'info>,
 
+    #[account(seeds = [b"config"], bump)]
     pub config: Account<'info, Config>,
 
     #[account(mut)]
@@ -421,6 +427,7 @@ pub struct VoidMarket<'info> {
     #[account(mut)]
     pub oracle: Signer<'info>,
 
+    #[account(seeds = [b"config"], bump)]
     pub config: Account<'info, Config>,
 
     #[account(mut)]
