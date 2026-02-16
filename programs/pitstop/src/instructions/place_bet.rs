@@ -1,3 +1,14 @@
+/// place_bet Rust parity model for LOCKED spec semantics.
+///
+/// Scope:
+/// - deterministic precondition/error mapping (PBT-REJ-*)
+/// - deterministic state/effect modeling for market/outcome_pool/position/vault
+/// - BetPlaced event payload modeling
+///
+/// Note:
+/// This is parity logic for spec/conformance verification; full Anchor account/CPI
+/// wiring is implemented in a later on-chain integration pass.
+
 use crate::{
     constants::REQUIRED_TOKEN_PROGRAM,
     error::PitStopError,
@@ -33,6 +44,7 @@ pub struct PlaceBetInput {
 }
 
 fn validate_place_bet_preconditions(input: &PlaceBetInput) -> Result<(), PitStopError> {
+    // Order mirrors locked precondition contract to keep deterministic error behavior.
     if input.config_paused {
         return Err(PitStopError::ProtocolPaused);
     }
@@ -55,7 +67,8 @@ fn validate_place_bet_preconditions(input: &PlaceBetInput) -> Result<(), PitStop
         return Err(PitStopError::InvalidTokenProgram);
     }
 
-    // Checked math first so overflow maps deterministically to Overflow.
+    // Checked math first so u64 overflow is surfaced as protocol error (Overflow),
+    // never as wraparound, panic, or misclassified cap rejection.
     let next_market_total = input
         .market_total_pool
         .checked_add(input.amount)
@@ -72,7 +85,8 @@ fn validate_place_bet_preconditions(input: &PlaceBetInput) -> Result<(), PitStop
         return Err(PitStopError::UserBetCapExceeded);
     }
 
-    // Outcome existence / relation checks.
+    // Outcome existence + relation checks (spec requires deterministic OutcomeMismatch
+    // for wrong relation and modeled missing/uninitialized cases in this parity layer).
     if !input.outcome_pool_exists
         || input.outcome_pool_market != input.market
         || input.outcome_pool_outcome_id != input.outcome_id
@@ -83,6 +97,16 @@ fn validate_place_bet_preconditions(input: &PlaceBetInput) -> Result<(), PitStop
     Ok(())
 }
 
+/// Executes place_bet effects after preconditions pass.
+///
+/// Effects modeled:
+/// - market.total_pool += amount
+/// - outcome_pool.pool_amount += amount
+/// - position.amount += amount
+/// - vault_amount += amount
+///
+/// Post-effect event:
+/// - BetPlaced { market, user, outcome_id, amount, market_total_pool, outcome_pool_amount, timestamp }
 pub fn place_bet(
     input: PlaceBetInput,
 ) -> Result<(Market, OutcomePool, Position, u64, BetPlaced), PitStopError> {
@@ -102,6 +126,7 @@ pub fn place_bet(
     let mut position = input.position_state;
     position.amount = position_amount;
 
+    // Event emitted only after successful state/effect updates (EVT-MTX alignment).
     let evt = BetPlaced {
         market: input.market,
         user: input.user,
@@ -176,6 +201,7 @@ mod tests {
 
     #[test]
     fn pbt_hp_updates_balances_and_event() {
+        // PBT-HP-001/002 baseline: successful transfer/effect/event modeling.
         let (m, o, p, vault, e) = place_bet(base_input()).expect("place_bet should pass");
         assert_eq!(m.total_pool, 1100);
         assert_eq!(o.pool_amount, 500);
@@ -187,6 +213,7 @@ mod tests {
 
     #[test]
     fn pbt_rej_matrix() {
+        // PBT-REJ-001..010 deterministic error mapping coverage.
         let mut bad = base_input();
         bad.config_paused = true;
         assert_eq!(place_bet(bad).unwrap_err(), PitStopError::ProtocolPaused);
