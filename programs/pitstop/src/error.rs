@@ -14,6 +14,7 @@ pub enum PitStopError {
     LockInPast,
     TooEarlyToLock,
     BettingClosed,
+    TooLateToOpen,
     TooLateToCancel,
 
     MarketNotSeeding,
@@ -28,17 +29,14 @@ pub enum PitStopError {
     ClaimWindowNotExpired,
 
     InvalidOutcomeId,
+    MaxOutcomesReached,
     OutcomeMismatch,
+    SeedingIncomplete,
 
     ZeroAmount,
-    ZeroOutcomes,
-    TooManyOutcomes,
-    MaxOutcomesReached,
-    SeedingIncomplete,
-    TooLateToOpen,
-
     MarketCapExceeded,
     UserBetCapExceeded,
+
     MarketHasBets,
     VaultNotEmpty,
 

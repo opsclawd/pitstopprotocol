@@ -65,3 +65,26 @@ pub struct MarketVoided {
     pub payload_hash: [u8; 32],
     pub resolution_timestamp: i64,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Claimed {
+    pub market: String,
+    pub user: String,
+    pub outcome_id: u8,
+    pub payout: u64,
+    pub claimed_at: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MarketSweptEvent {
+    pub market: String,
+    pub amount: u64,
+    pub to_treasury: String,
+    pub timestamp: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MarketCancelled {
+    pub market: String,
+    pub timestamp: i64,
+}
