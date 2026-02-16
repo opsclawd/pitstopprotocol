@@ -2,8 +2,8 @@ function validateClaimVoidedInput(input) {
   // CLV-REJ-001 + CLV-ORD-001: status gate must be evaluated before any vault/account usage.
   if (input.marketStatus !== 'Voided') return 'MarketNotVoided';
 
-  // CLV-REJ-002
-  if (input.positionClaimed) return 'AlreadyClaimed';
+  // CLV-REJ-002 (source of truth: position account state)
+  if (input.positionState.claimed) return 'AlreadyClaimed';
 
   // CLV-REJ-003 (inclusive end)
   const end = input.resolutionTimestamp + input.claimWindowSecs;
@@ -16,8 +16,8 @@ function executeClaimVoided(input) {
   const err = validateClaimVoidedInput(input);
   if (err) return { ok: false, error: err };
 
-  // Effects: refund full principal.
-  const payout = input.positionAmount;
+  // Effects: refund full principal from canonical position state.
+  const payout = input.positionState.amount;
 
   // Minimal numeric guards for JS reference implementation.
   if (!Number.isInteger(payout) || payout < 0) return { ok: false, error: 'Underflow' };
