@@ -30,13 +30,13 @@ function executePlaceBet(input) {
   const err = validatePlaceBetInput(input);
   if (err) return { ok: false, error: err };
 
-  const marketTotalPool = input.marketState.totalPool + input.amount;
+  const nextMarketPoolTotal = input.marketState.totalPool + input.amount;
   const outcomePoolAmount = input.outcomePoolState.poolAmount + input.amount;
-  const positionAmount = input.positionState.amount + input.amount;
+  const nextPositionStake = input.positionState.amount + input.amount;
 
-  const market = { ...input.marketState, totalPool: marketTotalPool };
+  const market = { ...input.marketState, totalPool: nextMarketPoolTotal };
   const outcomePool = { ...input.outcomePoolState, poolAmount: outcomePoolAmount };
-  const position = { ...input.positionState, amount: positionAmount };
+  const position = { ...input.positionState, amount: nextPositionStake };
   const vaultAmount = input.vaultAmount + input.amount;
 
   const event = {
@@ -45,7 +45,7 @@ function executePlaceBet(input) {
     user: input.user,
     outcome_id: input.outcomeId,
     amount: input.amount,
-    market_total_pool: marketTotalPool,
+    market_total_pool: nextMarketPoolTotal,
     outcome_pool_amount: outcomePoolAmount,
     timestamp: input.nowTs,
   };
