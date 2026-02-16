@@ -3,8 +3,10 @@
 ## Prereqs
 - Anchor CLI `0.30.1`
 - Solana CLI
-- funded devnet deploy keypair at `~/.config/solana/id.json`
+- funded devnet deploy wallet at `~/.config/solana/id.json`
+- canonical program keypair at `target/deploy/pitstop-keypair.json`
 - `configs/program-ids.json` has non-TODO `pitstop.devnet`
+- program keypair pubkey must match `configs/program-ids.json pitstop.devnet`
 
 ## Program ID management
 Source of truth:
@@ -52,5 +54,7 @@ Checks:
 ## GitHub Actions
 Workflow: `.github/workflows/devnet-deploy.yml`
 - Trigger manually with `workflow_dispatch`
-- Secret required: `SOLANA_DEVNET_KEYPAIR_B64` (base64 JSON keypair)
+- Secrets required for deploy:
+  - `SOLANA_DEVNET_KEYPAIR_B64` (base64 JSON deploy wallet)
+  - `SOLANA_DEVNET_PROGRAM_KEYPAIR_B64` (base64 JSON program keypair matching `pitstop.devnet`)
 - Optional input: `run_smoke_only=true`
