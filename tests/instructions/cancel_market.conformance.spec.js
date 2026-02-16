@@ -11,7 +11,6 @@ const { invokeCancelMarketOnProgram } = require('../harness/cancel_market_adapte
     marketStatus: 'Seeding',
     nowTs,
     lockTimestamp: 1_800_000_000,
-    marketTotalPool: 0,
     vaultAmount: 0,
     marketState: {
       status: 'Seeding',
@@ -40,6 +39,7 @@ const { invokeCancelMarketOnProgram } = require('../harness/cancel_market_adapte
     [{ nowTs: base.lockTimestamp }, 'TooLateToCancel'],
     [{ marketTotalPool: 1 }, 'MarketHasBets'],
     [{ vaultAmount: 1 }, 'VaultNotEmpty'],
+    [{ marketState: { ...base.marketState, totalPool: 1 } }, 'MarketHasBets'],
   ];
   for (const [patch, expected] of cases) {
     const out = await invokeCancelMarketOnProgram({ ...base, ...patch });

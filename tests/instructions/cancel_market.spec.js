@@ -9,7 +9,6 @@ const { validateCancelMarketInput } = require('../../packages/core/src/cancel_ma
     marketStatus: 'Seeding',
     nowTs: 1_799_999_999,
     lockTimestamp: 1_800_000_000,
-    marketTotalPool: 0,
     vaultAmount: 0,
   };
 
@@ -21,6 +20,7 @@ const { validateCancelMarketInput } = require('../../packages/core/src/cancel_ma
   assert.equal(validateCancelMarketInput({ ...base, nowTs: base.lockTimestamp }), 'TooLateToCancel');
   assert.equal(validateCancelMarketInput({ ...base, marketTotalPool: 1 }), 'MarketHasBets');
   assert.equal(validateCancelMarketInput({ ...base, vaultAmount: 1 }), 'VaultNotEmpty');
+  assert.equal(validateCancelMarketInput({ ...base, marketState: { ...base.marketState, totalPool: 1 } }), 'MarketHasBets');
 
   // CNL-ADV-001
   assert.equal(validateCancelMarketInput({ ...base, closeDestination: 'Other' }), 'Unauthorized');

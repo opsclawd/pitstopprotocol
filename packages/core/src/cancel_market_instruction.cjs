@@ -27,7 +27,7 @@ function executeCancelMarket(input) {
   const market = {
     ...input.marketState,
     status: 'Voided',
-    totalPool: input.marketTotalPool,
+    totalPool: input.marketState.totalPool,
     resolvedOutcome: null,
     resolutionTimestamp: input.nowTs,
     resolutionPayloadHash: '0'.repeat(64),
