@@ -6,27 +6,17 @@ const { invokePlaceBetOnProgram } = require('../harness/place_bet_adapter');
   const nowTs = 1_800_000_000;
   const base = {
     configPaused: false,
-    marketStatus: 'Open',
     nowTs,
-    marketLockTimestamp: nowTs + 100,
     outcomeId: 1,
-    marketOutcomeCount: 3,
-    marketMaxOutcomes: 3,
     amount: 100,
     tokenProgram: constants.REQUIRED_TOKEN_PROGRAM,
-    outcomePoolExists: true,
-    outcomePoolMarket: 'MarketA',
-    outcomePoolOutcomeId: 1,
     market: 'MarketA',
     user: 'UserA',
-    marketTotalPool: 1000,
     maxTotalPoolPerMarket: 10_000,
-    userPositionAmount: 200,
     maxBetPerUserPerMarket: 1000,
-    outcomePoolAmount: 400,
     vaultAmount: 1000,
-    marketState: { totalPool: 1000, status: 'Open' },
-    outcomePoolState: { poolAmount: 400 },
+    marketState: { totalPool: 1000, status: 'Open', lockTimestamp: nowTs + 100, outcomeCount: 3, maxOutcomes: 3 },
+    outcomePoolState: { poolAmount: 400, market: 'MarketA', outcomeId: 1 },
     positionState: { amount: 200 },
   };
 
@@ -47,17 +37,14 @@ const { invokePlaceBetOnProgram } = require('../harness/place_bet_adapter');
   assert.equal(ok.event.market_total_pool, 1100);
   assert.equal(ok.event.outcome_pool_amount, 500);
 
-
-
   // PBT-HP-002: init_if_needed style new position starts at zero and increments.
   const newPos = await invokePlaceBetOnProgram({
     ...base,
     user: 'UserB',
-    userPositionAmount: 0,
     positionState: { amount: 0 },
     amount: 75,
-    outcomePoolAmount: 200,
-    marketTotalPool: 500,
+    outcomePoolState: { ...base.outcomePoolState, poolAmount: 200 },
+    marketState: { ...base.marketState, totalPool: 500 },
     vaultAmount: 500,
   });
   assert.equal(newPos.ok, true);
@@ -73,14 +60,14 @@ const { invokePlaceBetOnProgram } = require('../harness/place_bet_adapter');
   // PBT-REJ-001..010
   const cases = [
     [{ configPaused: true }, 'ProtocolPaused'],
-    [{ marketStatus: 'Locked' }, 'MarketNotOpen'],
-    [{ nowTs: base.marketLockTimestamp }, 'BettingClosed'],
+    [{ marketState: { ...base.marketState, status: 'Locked' } }, 'MarketNotOpen'],
+    [{ nowTs: base.marketState.lockTimestamp }, 'BettingClosed'],
     [{ outcomeId: 100 }, 'InvalidOutcomeId'],
-    [{ marketOutcomeCount: 2 }, 'MarketNotReady'],
+    [{ marketState: { ...base.marketState, outcomeCount: 2 } }, 'MarketNotReady'],
     [{ amount: 0 }, 'ZeroAmount'],
-    [{ marketTotalPool: 9_950 }, 'MarketCapExceeded'],
-    [{ userPositionAmount: 950 }, 'UserBetCapExceeded'],
-    [{ outcomePoolExists: false }, 'OutcomeMismatch'],
+    [{ marketState: { ...base.marketState, totalPool: 9_950 } }, 'MarketCapExceeded'],
+    [{ positionState: { ...base.positionState, amount: 950 } }, 'UserBetCapExceeded'],
+    [{ outcomePoolState: null }, 'OutcomeMismatch'],
     [{ tokenProgram: 'TokenzFake' }, 'InvalidTokenProgram'],
   ];
   for (const [patch, expected] of cases) {
@@ -92,8 +79,8 @@ const { invokePlaceBetOnProgram } = require('../harness/place_bet_adapter');
 
   // PBT-ADV-001..004 basic adversarial mismatches
   const advCases = [
-    [{ outcomePoolMarket: 'OtherMarket' }, 'OutcomeMismatch'],
-    [{ outcomePoolOutcomeId: 2 }, 'OutcomeMismatch'],
+    [{ outcomePoolState: { ...base.outcomePoolState, market: 'OtherMarket' } }, 'OutcomeMismatch'],
+    [{ outcomePoolState: { ...base.outcomePoolState, outcomeId: 2 } }, 'OutcomeMismatch'],
     [{ amount: -1 }, 'ZeroAmount'],
     [{ amount: 1.5 }, 'ZeroAmount'],
   ];

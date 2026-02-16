@@ -8,10 +8,10 @@ function validateClaimResolvedInput(input) {
 
   // CLR-ORD-001: evaluate market lifecycle status before any vault/outcome math checks.
   // This guarantees deterministic error precedence when multiple inputs are invalid.
-  if (input.marketStatus !== 'Resolved') return 'MarketNotResolved';
+  if (input.marketState.status !== 'Resolved') return 'MarketNotResolved';
 
   // CLR-REJ-002: claim is single-use; once claimed, all future attempts must fail.
-  if (input.positionClaimed) return 'AlreadyClaimed';
+  if (input.positionState.claimed) return 'AlreadyClaimed';
 
   // CLR-REJ-003: claim window is inclusive at resolutionTimestamp + claimWindowSecs.
   // Expiry only begins strictly after the inclusive end boundary.
@@ -24,9 +24,9 @@ function validateClaimResolvedInput(input) {
   // CLR-REJ-004: winning_outcome_pool relation must be valid for deterministic payout math.
   // Missing account or any market/outcome mismatch collapses to OutcomeMismatch.
   if (
-    !input.outcomePoolExists ||
-    input.outcomePoolMarket !== input.market ||
-    input.outcomePoolOutcomeId !== input.outcomeId
+    !input.outcomePoolState ||
+    input.outcomePoolState.market !== input.market ||
+    input.outcomePoolState.outcomeId !== input.outcomeId
   ) {
     return 'OutcomeMismatch';
   }
@@ -43,14 +43,14 @@ function executeClaimResolved(input) {
   const isWinner = input.outcomeId === input.winningOutcomeId;
 
   // Prize pool is total pool minus protocol fee (as defined in locked math primitives).
-  const prizePool = computePrizePool(input.marketTotalPool, input.feeBps);
+  const prizePool = computePrizePool(input.marketState.totalPool, input.feeBps);
 
   let payout = 0;
   if (isWinner) {
     // Winner payout: floor(position.amount * prizePool / winningOutcomePool.amount)
     // with deterministic error mapping for harness conformance.
     try {
-      payout = computePayout(input.positionAmount, prizePool, input.outcomePoolAmount);
+      payout = computePayout(input.positionState.amount, prizePool, input.outcomePoolState.poolAmount);
     } catch (e) {
       if (e && e.message === 'DivisionByZero') return { ok: false, error: 'DivisionByZero' };
       return { ok: false, error: 'Overflow' };

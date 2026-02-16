@@ -1,6 +1,6 @@
 function validateClaimVoidedInput(input) {
   // CLV-REJ-001 + CLV-ORD-001: status gate must be evaluated before any vault/account usage.
-  if (input.marketStatus !== 'Voided') return 'MarketNotVoided';
+  if (input.marketState.status !== 'Voided') return 'MarketNotVoided';
 
   // CLV-REJ-002 (source of truth: position account state)
   if (input.positionState.claimed) return 'AlreadyClaimed';

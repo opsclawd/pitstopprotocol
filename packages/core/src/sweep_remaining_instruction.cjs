@@ -8,10 +8,10 @@ function validateSweepRemainingInput(input) {
   if (input.tokenProgram !== constants.REQUIRED_TOKEN_PROGRAM) return 'InvalidTokenProgram';
 
   // SWP-REJ-002: market must be in {Resolved, Voided}.
-  if (input.marketStatus !== 'Resolved' && input.marketStatus !== 'Voided') return 'MarketNotResolved';
+  if (input.marketState.status !== 'Resolved' && input.marketState.status !== 'Voided') return 'MarketNotResolved';
 
   // SWP-WIN-001: claim window must be expired.
-  const claimWindowEnd = input.resolutionTimestamp + input.claimWindowSecs;
+  const claimWindowEnd = input.marketState.resolutionTimestamp + input.claimWindowSecs;
   if (input.nowTs <= claimWindowEnd) return 'ClaimWindowNotExpired';
 
   // Treasury constraints (mint + owner) must match config.

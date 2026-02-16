@@ -8,16 +8,13 @@ const { invokeAddOutcomeOnProgram } = require('../harness/add_outcome_adapter');
     authority: 'AuthA',
     configAuthority: 'AuthA',
     market: 'MarketPdaA',
-    marketStatus: 'Seeding',
-    marketOutcomeCount: 1,
-    marketMaxOutcomes: 3,
     outcomeId: 2,
-    outcomePoolMarket: 'MarketPdaA',
     marketState: {
       status: 'Seeding',
       outcomeCount: 1,
       maxOutcomes: 3,
     },
+    outcomePoolState: { market: 'MarketPdaA', outcomeId: 2, poolAmount: 0 },
     nowTs,
   };
 
@@ -37,13 +34,12 @@ const { invokeAddOutcomeOnProgram } = require('../harness/add_outcome_adapter');
   // ADO-REJ-001..005
   const cases = [
     [{ authority: 'Other' }, 'Unauthorized'],
-    [{ marketStatus: 'Open' }, 'MarketNotSeeding'],
+    [{ marketState: { ...base.marketState, status: 'Open' } }, 'MarketNotSeeding'],
     [{ outcomeId: 100 }, 'InvalidOutcomeId'],
     [{ outcomeId: -1 }, 'InvalidOutcomeId'],
     [{ outcomeId: 1.5 }, 'InvalidOutcomeId'],
-    [{ marketOutcomeCount: 3 }, 'MaxOutcomesReached'],
-    [{ outcomePoolMarket: 'OtherMarket' }, 'OutcomeMismatch'],
-    [{ marketState: { ...base.marketState, outcomeCount: 2 } }, 'OutcomeMismatch'],
+    [{ marketState: { ...base.marketState, outcomeCount: 3 } }, 'MaxOutcomesReached'],
+    [{ outcomePoolState: { ...base.outcomePoolState, market: 'OtherMarket' } }, 'OutcomeMismatch'],
   ];
 
   for (const [patch, expected] of cases) {

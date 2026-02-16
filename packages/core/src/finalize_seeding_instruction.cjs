@@ -2,11 +2,11 @@ function validateFinalizeSeedingInput(input) {
   // FSE-REJ-001: only config authority can finalize seeding.
   if (input.authority !== input.configAuthority) return 'Unauthorized';
   // FSE-REJ-002: market must still be in Seeding.
-  if (input.marketStatus !== 'Seeding') return 'MarketNotSeeding';
+  if (input.marketState.status !== 'Seeding') return 'MarketNotSeeding';
   // FSE-REJ-003: all outcomes must be seeded before open transition.
-  if (input.marketOutcomeCount !== input.marketMaxOutcomes) return 'SeedingIncomplete';
+  if (input.marketState.outcomeCount !== input.marketState.maxOutcomes) return 'SeedingIncomplete';
   // FSE-REJ-004: cannot open at or after lock timestamp.
-  if (input.nowTs >= input.lockTimestamp) return 'TooLateToOpen';
+  if (input.nowTs >= input.marketState.lockTimestamp) return 'TooLateToOpen';
   return null;
 }
 

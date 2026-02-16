@@ -1,7 +1,7 @@
 function validateLockMarketInput(input) {
   if (input.authority !== input.configAuthority) return 'Unauthorized'; // LKM-REJ-001
-  if (input.marketStatus !== 'Open') return 'MarketNotOpen'; // LKM-REJ-002
-  if (input.nowTs < input.lockTimestamp) return 'TooEarlyToLock'; // LKM-REJ-003
+  if (input.marketState.status !== 'Open') return 'MarketNotOpen'; // LKM-REJ-002
+  if (input.nowTs < input.marketState.lockTimestamp) return 'TooEarlyToLock'; // LKM-REJ-003
   return null;
 }
 
