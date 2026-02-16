@@ -1,2 +1,3 @@
-// lock_market instruction skeleton.
-// Implement per SPEC_INSTRUCTIONS/lock_market.md (LOCKED) in issue-specific PR.
+// lock_market instruction skeleton for #64.
+// JS conformance implementation is in packages/core/src/lock_market_instruction.cjs.
+// Rust parity/on-chain wiring lands in follow-up issue #64b.
