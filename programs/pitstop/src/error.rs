@@ -28,4 +28,6 @@ pub enum PitStopError {
     UserBetCapExceeded,
     Overflow,
     TooEarlyToLock,
+    UnauthorizedOracle,
+    MarketNotLocked,
 }

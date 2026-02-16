@@ -50,3 +50,11 @@ pub struct MarketLocked {
     pub market: String,
     pub timestamp: i64,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MarketResolved {
+    pub market: String,
+    pub winning_outcome: u8,
+    pub payload_hash: [u8; 32],
+    pub resolution_timestamp: i64,
+}
