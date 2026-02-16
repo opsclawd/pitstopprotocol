@@ -58,3 +58,10 @@ pub struct MarketResolved {
     pub payload_hash: [u8; 32],
     pub resolution_timestamp: i64,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MarketVoided {
+    pub market: String,
+    pub payload_hash: [u8; 32],
+    pub resolution_timestamp: i64,
+}
