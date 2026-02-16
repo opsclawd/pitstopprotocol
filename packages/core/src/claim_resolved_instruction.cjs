@@ -2,20 +2,27 @@ const constants = require('../../../specs/constants.json');
 const { computePrizePool, computePayout } = require('./protocol_primitives.cjs');
 
 function validateClaimResolvedInput(input) {
-  // Missing position PDA account -> framework account resolution failure (expected)
+  // CLR-ADV-001: missing position PDA is expected to fail at account resolution layer.
+  // Keep this throw-based behavior in JS model so harness can assert framework parity.
   if (input.positionExists === false) throw new Error('FrameworkAccountNotFound');
 
-  // Failure ordering (locked): status gate is evaluated before vault/outcome usage.
+  // CLR-ORD-001: evaluate market lifecycle status before any vault/outcome math checks.
+  // This guarantees deterministic error precedence when multiple inputs are invalid.
   if (input.marketStatus !== 'Resolved') return 'MarketNotResolved';
 
+  // CLR-REJ-002: claim is single-use; once claimed, all future attempts must fail.
   if (input.positionClaimed) return 'AlreadyClaimed';
 
+  // CLR-REJ-003: claim window is inclusive at resolutionTimestamp + claimWindowSecs.
+  // Expiry only begins strictly after the inclusive end boundary.
   const claimEnd = input.resolutionTimestamp + input.claimWindowSecs;
   if (input.nowTs > claimEnd) return 'ClaimWindowExpired';
 
+  // CLR-ADV-002: transfers are locked to canonical SPL Token Program id.
   if (input.tokenProgram !== constants.REQUIRED_TOKEN_PROGRAM) return 'InvalidTokenProgram';
 
-  // Deterministic wrapping: outcome pool missing/mismatched -> OutcomeMismatch
+  // CLR-REJ-004: winning_outcome_pool relation must be valid for deterministic payout math.
+  // Missing account or any market/outcome mismatch collapses to OutcomeMismatch.
   if (
     !input.outcomePoolExists ||
     input.outcomePoolMarket !== input.market ||
