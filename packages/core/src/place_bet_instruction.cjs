@@ -2,21 +2,25 @@ const constants = require('../../../specs/constants.json');
 
 function validatePlaceBetInput(input) {
   if (input.configPaused) return 'ProtocolPaused'; // PBT-REJ-001
-  if (input.marketStatus !== 'Open') return 'MarketNotOpen'; // PBT-REJ-002
-  if (input.nowTs >= input.marketLockTimestamp) return 'BettingClosed'; // PBT-REJ-003
+  if (input.marketState.status !== 'Open') return 'MarketNotOpen'; // PBT-REJ-002
+  if (input.nowTs >= input.marketState.lockTimestamp) return 'BettingClosed'; // PBT-REJ-003
   if (!Number.isInteger(input.outcomeId) || input.outcomeId < 0 || input.outcomeId > 99) return 'InvalidOutcomeId'; // PBT-REJ-004
-  if (input.marketOutcomeCount !== input.marketMaxOutcomes) return 'MarketNotReady'; // PBT-REJ-005
+  if (input.marketState.outcomeCount !== input.marketState.maxOutcomes) return 'MarketNotReady'; // PBT-REJ-005
   if (!Number.isInteger(input.amount) || input.amount <= 0) return 'ZeroAmount'; // PBT-REJ-006
   if (input.tokenProgram !== constants.REQUIRED_TOKEN_PROGRAM) return 'InvalidTokenProgram'; // PBT-REJ-010
 
-  if (!input.outcomePoolExists || input.outcomePoolMarket !== input.market || input.outcomePoolOutcomeId !== input.outcomeId) {
+  if (
+    !input.outcomePoolState ||
+    input.outcomePoolState.market !== input.market ||
+    input.outcomePoolState.outcomeId !== input.outcomeId
+  ) {
     return 'OutcomeMismatch'; // PBT-REJ-009 (wrapped deterministic mismatch)
   }
 
-  const nextMarketTotal = input.marketTotalPool + input.amount;
+  const nextMarketTotal = input.marketState.totalPool + input.amount;
   if (nextMarketTotal > input.maxTotalPoolPerMarket) return 'MarketCapExceeded'; // PBT-REJ-007
 
-  const nextUserPosition = input.userPositionAmount + input.amount;
+  const nextUserPosition = input.positionState.amount + input.amount;
   if (nextUserPosition > input.maxBetPerUserPerMarket) return 'UserBetCapExceeded'; // PBT-REJ-008
 
   return null;
@@ -26,9 +30,9 @@ function executePlaceBet(input) {
   const err = validatePlaceBetInput(input);
   if (err) return { ok: false, error: err };
 
-  const marketTotalPool = input.marketTotalPool + input.amount;
-  const outcomePoolAmount = input.outcomePoolAmount + input.amount;
-  const positionAmount = input.userPositionAmount + input.amount;
+  const marketTotalPool = input.marketState.totalPool + input.amount;
+  const outcomePoolAmount = input.outcomePoolState.poolAmount + input.amount;
+  const positionAmount = input.positionState.amount + input.amount;
 
   const market = { ...input.marketState, totalPool: marketTotalPool };
   const outcomePool = { ...input.outcomePoolState, poolAmount: outcomePoolAmount };

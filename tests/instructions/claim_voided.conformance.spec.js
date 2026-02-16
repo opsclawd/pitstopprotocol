@@ -8,9 +8,7 @@ const { invokeClaimVoidedOnProgram } = require('../harness/claim_voided_adapter'
     user: 'UserA',
     outcomeId: 7,
 
-    marketStatus: 'Voided',
-    positionClaimed: false,
-    positionAmount: 250,
+    marketState: { status: 'Voided' },
 
     resolutionTimestamp: 1_800_000_000,
     claimWindowSecs: 3600,
@@ -39,7 +37,7 @@ const { invokeClaimVoidedOnProgram } = require('../harness/claim_voided_adapter'
 
   // CLV-REJ-001..003
   const cases = [
-    [{ marketStatus: 'Resolved' }, 'MarketNotVoided'],
+    [{ marketState: { status: 'Resolved' } }, 'MarketNotVoided'],
     [{ positionState: { ...base.positionState, claimed: true } }, 'AlreadyClaimed'],
     [{ nowTs: base.resolutionTimestamp + base.claimWindowSecs + 1 }, 'ClaimWindowExpired'],
   ];
@@ -52,7 +50,7 @@ const { invokeClaimVoidedOnProgram } = require('../harness/claim_voided_adapter'
 
   // CLV-ORD-001: post-sweep claim must fail by status error before any vault usage.
   // Here vaultAmount is intentionally missing; correct behavior is a deterministic MarketNotVoided.
-  const swept = await invokeClaimVoidedOnProgram({ ...base, marketStatus: 'Swept', vaultAmount: undefined });
+  const swept = await invokeClaimVoidedOnProgram({ ...base, marketState: { status: 'Swept' }, vaultAmount: undefined });
   assert.equal(swept.ok, false);
   assert.equal(swept.error, 'MarketNotVoided');
 

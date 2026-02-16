@@ -6,21 +6,21 @@ const { validateResolveMarketInput } = require('../../packages/core/src/resolve_
     oracle: 'OracleA',
     configOracle: 'OracleA',
     market: 'MarketA',
-    marketStatus: 'Locked',
-    marketOutcomeCount: 3,
+    marketState: { status: 'Locked', outcomeCount: 3 },
     winningOutcomeId: 1,
     payloadHashHex: 'ab'.repeat(32),
-    winningOutcomePoolExists: true,
-    winningOutcomePoolMarket: 'MarketA',
-    winningOutcomePoolOutcomeId: 1,
+    winningOutcomePoolState: { market: 'MarketA', outcomeId: 1 },
   };
 
   assert.equal(validateResolveMarketInput(base), null);
   assert.equal(validateResolveMarketInput({ ...base, oracle: 'Other' }), 'UnauthorizedOracle');
-  assert.equal(validateResolveMarketInput({ ...base, marketStatus: 'Open' }), 'MarketNotLocked');
+  assert.equal(validateResolveMarketInput({ ...base, marketState: { ...base.marketState, status: 'Open' } }), 'MarketNotLocked');
   assert.equal(validateResolveMarketInput({ ...base, winningOutcomeId: 100 }), 'InvalidOutcomeId');
-  assert.equal(validateResolveMarketInput({ ...base, winningOutcomeId: 2, marketOutcomeCount: 2 }), 'InvalidOutcomeId');
-  assert.equal(validateResolveMarketInput({ ...base, winningOutcomePoolExists: false }), 'OutcomeMismatch');
+  assert.equal(
+    validateResolveMarketInput({ ...base, winningOutcomeId: 2, marketState: { ...base.marketState, outcomeCount: 2 } }),
+    'InvalidOutcomeId'
+  );
+  assert.equal(validateResolveMarketInput({ ...base, winningOutcomePoolState: null }), 'OutcomeMismatch');
 
   console.log('resolve_market spec tests ok');
 })();

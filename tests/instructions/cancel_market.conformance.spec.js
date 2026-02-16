@@ -8,12 +8,11 @@ const { invokeCancelMarketOnProgram } = require('../harness/cancel_market_adapte
     configAuthority: 'AuthA',
     closeDestination: 'AuthA',
     market: 'MarketA',
-    marketStatus: 'Seeding',
     nowTs,
-    lockTimestamp: 1_800_000_000,
     vaultAmount: 0,
     marketState: {
       status: 'Seeding',
+      lockTimestamp: 1_800_000_000,
       totalPool: 0,
       resolvedOutcome: null,
       resolutionPayloadHash: 'f'.repeat(64),
@@ -35,8 +34,8 @@ const { invokeCancelMarketOnProgram } = require('../harness/cancel_market_adapte
   // CNL-REJ-001..005
   const cases = [
     [{ authority: 'Other' }, 'Unauthorized'],
-    [{ marketStatus: 'Open' }, 'MarketNotSeeding'],
-    [{ nowTs: base.lockTimestamp }, 'TooLateToCancel'],
+    [{ marketState: { ...base.marketState, status: 'Open' } }, 'MarketNotSeeding'],
+    [{ nowTs: base.marketState.lockTimestamp }, 'TooLateToCancel'],
     [{ vaultAmount: 1 }, 'VaultNotEmpty'],
     [{ marketState: { ...base.marketState, totalPool: 1 } }, 'MarketHasBets'],
   ];
@@ -46,10 +45,6 @@ const { invokeCancelMarketOnProgram } = require('../harness/cancel_market_adapte
     assert.equal(out.error, expected);
     assert.equal(out.event, undefined);
   }
-
-  // mirrored marketTotalPool must not override canonical marketState.totalPool
-  const mirrored = await invokeCancelMarketOnProgram({ ...base, marketTotalPool: 999 });
-  assert.equal(mirrored.ok, true);
 
   // CNL-ADV-001
   const adv = await invokeCancelMarketOnProgram({ ...base, closeDestination: 'Other' });

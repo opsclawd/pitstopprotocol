@@ -3,8 +3,7 @@ const { validateClaimVoidedInput } = require('../../packages/core/src/claim_void
 
 (function run() {
   const base = {
-    marketStatus: 'Voided',
-    positionClaimed: false,
+    marketState: { status: 'Voided' },
     positionState: { claimed: false, payout: 0, amount: 250 },
     resolutionTimestamp: 1_800_000_000,
     claimWindowSecs: 3600,
@@ -12,7 +11,7 @@ const { validateClaimVoidedInput } = require('../../packages/core/src/claim_void
   };
 
   assert.equal(validateClaimVoidedInput(base), null);
-  assert.equal(validateClaimVoidedInput({ ...base, marketStatus: 'Resolved' }), 'MarketNotVoided');
+  assert.equal(validateClaimVoidedInput({ ...base, marketState: { status: 'Resolved' } }), 'MarketNotVoided');
   assert.equal(validateClaimVoidedInput({ ...base, positionState: { ...base.positionState, claimed: true } }), 'AlreadyClaimed');
   assert.equal(
     validateClaimVoidedInput({ ...base, nowTs: base.resolutionTimestamp + base.claimWindowSecs + 1 }),

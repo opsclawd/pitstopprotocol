@@ -5,7 +5,6 @@ const { validateVoidMarketInput } = require('../../packages/core/src/void_market
   const base = {
     oracle: 'OracleA',
     configOracle: 'OracleA',
-    marketStatus: 'Locked',
     marketState: { status: 'Locked' },
   };
 

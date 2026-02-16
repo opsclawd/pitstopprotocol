@@ -7,13 +7,9 @@ const { invokeResolveMarketOnProgram } = require('../harness/resolve_market_adap
     oracle: 'OracleA',
     configOracle: 'OracleA',
     market: 'MarketA',
-    marketStatus: 'Locked',
-    marketOutcomeCount: 3,
     winningOutcomeId: 1,
     payloadHashHex: 'ab'.repeat(32),
-    winningOutcomePoolExists: true,
-    winningOutcomePoolMarket: 'MarketA',
-    winningOutcomePoolOutcomeId: 1,
+    winningOutcomePoolState: { market: 'MarketA', outcomeId: 1, poolAmount: 0 },
     nowTs,
     marketState: {
       status: 'Locked',
@@ -41,13 +37,13 @@ const { invokeResolveMarketOnProgram } = require('../harness/resolve_market_adap
   // RSM-REJ-001..004
   const cases = [
     [{ oracle: 'Other' }, 'UnauthorizedOracle'],
-    [{ marketStatus: 'Open' }, 'MarketNotLocked'],
+    [{ marketState: { ...base.marketState, status: 'Open' } }, 'MarketNotLocked'],
     [{ winningOutcomeId: 100 }, 'InvalidOutcomeId'],
     // RSM-REJ-004: winning outcome must exist in seeded outcomes.
-    [{ winningOutcomeId: base.marketOutcomeCount }, 'InvalidOutcomeId'],
+    [{ winningOutcomeId: base.marketState.outcomeCount }, 'InvalidOutcomeId'],
     // Wrong PDA passed (relation mismatch) -> OutcomeMismatch.
-    [{ winningOutcomePoolOutcomeId: 2 }, 'OutcomeMismatch'],
-    [{ winningOutcomePoolMarket: 'OtherMarket' }, 'OutcomeMismatch'],
+    [{ winningOutcomePoolState: { ...base.winningOutcomePoolState, outcomeId: 2 } }, 'OutcomeMismatch'],
+    [{ winningOutcomePoolState: { ...base.winningOutcomePoolState, market: 'OtherMarket' } }, 'OutcomeMismatch'],
   ];
   for (const [patch, expected] of cases) {
     const out = await invokeResolveMarketOnProgram({ ...base, ...patch });
@@ -57,7 +53,7 @@ const { invokeResolveMarketOnProgram } = require('../harness/resolve_market_adap
   }
 
   // RSM-ADV-001: missing/uninitialized winning_outcome_pool must deterministically map to OutcomeMismatch.
-  const missing = await invokeResolveMarketOnProgram({ ...base, winningOutcomePoolExists: false });
+  const missing = await invokeResolveMarketOnProgram({ ...base, winningOutcomePoolState: null });
   assert.equal(missing.ok, false);
   assert.equal(missing.error, 'OutcomeMismatch');
 

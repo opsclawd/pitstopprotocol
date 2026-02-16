@@ -7,10 +7,8 @@ const { invokeLockMarketOnProgram } = require('../harness/lock_market_adapter');
     authority: 'AuthA',
     configAuthority: 'AuthA',
     market: 'MarketA',
-    marketStatus: 'Open',
     nowTs,
-    lockTimestamp: 1_800_000_000,
-    marketState: { status: 'Open' },
+    marketState: { status: 'Open', lockTimestamp: 1_800_000_000 },
   };
 
   // LKM-HP-001
@@ -24,8 +22,8 @@ const { invokeLockMarketOnProgram } = require('../harness/lock_market_adapter');
   // LKM-REJ-001..003
   const cases = [
     [{ authority: 'Other' }, 'Unauthorized'],
-    [{ marketStatus: 'Locked' }, 'MarketNotOpen'],
-    [{ nowTs: base.lockTimestamp - 1 }, 'TooEarlyToLock'],
+    [{ marketState: { ...base.marketState, status: 'Locked' } }, 'MarketNotOpen'],
+    [{ nowTs: base.marketState.lockTimestamp - 1 }, 'TooEarlyToLock'],
   ];
   for (const [patch, expected] of cases) {
     const out = await invokeLockMarketOnProgram({ ...base, ...patch });

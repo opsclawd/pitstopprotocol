@@ -6,9 +6,7 @@ const { validateSweepRemainingInput } = require('../../packages/core/src/sweep_r
   const base = {
     authority: 'AuthA',
     configAuthority: 'AuthA',
-    marketStatus: 'Resolved',
     nowTs: 1_800_010_000,
-    resolutionTimestamp: 1_800_000_000,
     claimWindowSecs: 5000,
     vaultAmount: 123,
     treasuryAmount: 1000,
@@ -19,7 +17,7 @@ const { validateSweepRemainingInput } = require('../../packages/core/src/sweep_r
     treasuryOwner: 'TreasuryAuthA',
     treasuryAuthority: 'TreasuryAuthA',
     tokenProgram: constants.REQUIRED_TOKEN_PROGRAM,
-    marketState: { status: 'Resolved' },
+    marketState: { status: 'Resolved', resolutionTimestamp: 1_800_000_000 },
     market: 'MarketA',
   };
 
@@ -30,11 +28,11 @@ const { validateSweepRemainingInput } = require('../../packages/core/src/sweep_r
   assert.equal(validateSweepRemainingInput({ ...base, authority: 'Other' }), 'Unauthorized');
 
   // SWP-REJ-002 / SWP-IDEM-001 (status gate includes Swept deterministically)
-  assert.equal(validateSweepRemainingInput({ ...base, marketStatus: 'Open' }), 'MarketNotResolved');
-  assert.equal(validateSweepRemainingInput({ ...base, marketStatus: 'Swept' }), 'MarketNotResolved');
+  assert.equal(validateSweepRemainingInput({ ...base, marketState: { ...base.marketState, status: 'Open' } }), 'MarketNotResolved');
+  assert.equal(validateSweepRemainingInput({ ...base, marketState: { ...base.marketState, status: 'Swept' } }), 'MarketNotResolved');
 
   // SWP-WIN-001
-  const claimEnd = base.resolutionTimestamp + base.claimWindowSecs;
+  const claimEnd = base.marketState.resolutionTimestamp + base.claimWindowSecs;
   assert.equal(validateSweepRemainingInput({ ...base, nowTs: claimEnd }), 'ClaimWindowNotExpired');
 
   // SWP-REJ-004 treasury constraints

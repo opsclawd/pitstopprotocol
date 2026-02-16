@@ -8,7 +8,6 @@ const { invokeVoidMarketOnProgram } = require('../harness/void_market_adapter');
     oracle: 'OracleA',
     configOracle: 'OracleA',
     market: 'MarketA',
-    marketStatus: 'Locked',
     payloadHash,
     nowTs,
     marketState: {
@@ -36,8 +35,6 @@ const { invokeVoidMarketOnProgram } = require('../harness/void_market_adapter');
   const cases = [
     [{ oracle: 'Other' }, 'UnauthorizedOracle'],
     [{ marketState: { ...base.marketState, status: 'Open' } }, 'MarketNotLocked'],
-    // mirrored field mismatch: canonical marketState.status governs
-    [{ marketStatus: 'Locked', marketState: { ...base.marketState, status: 'Open' } }, 'MarketNotLocked'],
     [{ marketState: { ...base.marketState, status: 'Resolved' } }, 'MarketNotLocked'],
   ];
   for (const [patch, expected] of cases) {

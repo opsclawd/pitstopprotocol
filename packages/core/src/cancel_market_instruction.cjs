@@ -6,10 +6,10 @@ function validateCancelMarketInput(input) {
   if (input.closeDestination !== input.authority) return 'Unauthorized';
 
   // CNL-REJ-002: only Seeding markets can be cancelled.
-  if (input.marketStatus !== 'Seeding') return 'MarketNotSeeding';
+  if (input.marketState.status !== 'Seeding') return 'MarketNotSeeding';
 
   // CNL-REJ-003: cancel allowed strictly before lockTimestamp.
-  if (input.nowTs >= input.lockTimestamp) return 'TooLateToCancel';
+  if (input.nowTs >= input.marketState.lockTimestamp) return 'TooLateToCancel';
 
   // CNL-REJ-004: market must have no bets (canonical source: market account state).
   if (input.marketState.totalPool !== 0) return 'MarketHasBets';

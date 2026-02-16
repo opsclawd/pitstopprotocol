@@ -7,15 +7,12 @@ const { invokeFinalizeSeedingOnProgram } = require('../harness/finalize_seeding_
     authority: 'AuthA',
     configAuthority: 'AuthA',
     market: 'MarketPdaA',
-    marketStatus: 'Seeding',
-    marketOutcomeCount: 3,
-    marketMaxOutcomes: 3,
-    lockTimestamp: nowTs + 100,
     nowTs,
     marketState: {
       status: 'Seeding',
       outcomeCount: 3,
       maxOutcomes: 3,
+      lockTimestamp: nowTs + 100,
     },
   };
 
@@ -30,9 +27,9 @@ const { invokeFinalizeSeedingOnProgram } = require('../harness/finalize_seeding_
   // FSE-REJ-001..004
   const cases = [
     [{ authority: 'Other' }, 'Unauthorized'],
-    [{ marketStatus: 'Open' }, 'MarketNotSeeding'],
-    [{ marketOutcomeCount: 2 }, 'SeedingIncomplete'],
-    [{ nowTs: base.lockTimestamp }, 'TooLateToOpen'],
+    [{ marketState: { ...base.marketState, status: 'Open' } }, 'MarketNotSeeding'],
+    [{ marketState: { ...base.marketState, outcomeCount: 2 } }, 'SeedingIncomplete'],
+    [{ nowTs: base.marketState.lockTimestamp }, 'TooLateToOpen'],
   ];
   for (const [patch, expected] of cases) {
     const out = await invokeFinalizeSeedingOnProgram({ ...base, ...patch });

@@ -3,17 +3,15 @@ const constants = require('../../specs/constants.json');
 const { invokeSweepRemainingOnProgram } = require('../harness/sweep_remaining_adapter');
 
 (async function run() {
-  const resolutionTimestamp = 1_800_000_000;
   const claimWindowSecs = 5000;
-  const nowTs = resolutionTimestamp + claimWindowSecs + 1;
+  const baseResolutionTs = 1_800_000_000;
+  const nowTs = baseResolutionTs + claimWindowSecs + 1;
 
   const base = {
     authority: 'AuthA',
     configAuthority: 'AuthA',
     market: 'MarketA',
-    marketStatus: 'Resolved',
     nowTs,
-    resolutionTimestamp,
     claimWindowSecs,
     vaultAmount: 123,
     treasuryAmount: 1000,
@@ -24,7 +22,7 @@ const { invokeSweepRemainingOnProgram } = require('../harness/sweep_remaining_ad
     treasuryOwner: 'TreasuryAuthA',
     treasuryAuthority: 'TreasuryAuthA',
     tokenProgram: constants.REQUIRED_TOKEN_PROGRAM,
-    marketState: { status: 'Resolved' },
+    marketState: { status: 'Resolved', resolutionTimestamp: baseResolutionTs },
   };
 
   // SWP-HP-001
@@ -49,8 +47,8 @@ const { invokeSweepRemainingOnProgram } = require('../harness/sweep_remaining_ad
   // SWP-REJ-001..004
   const rejCases = [
     [{ authority: 'Other' }, 'Unauthorized'],
-    [{ marketStatus: 'Open' }, 'MarketNotResolved'],
-    [{ nowTs: resolutionTimestamp + claimWindowSecs }, 'ClaimWindowNotExpired'],
+    [{ marketState: { ...base.marketState, status: 'Open' } }, 'MarketNotResolved'],
+    [{ nowTs: base.marketState.resolutionTimestamp + claimWindowSecs }, 'ClaimWindowNotExpired'],
     [{ configTreasury: 'OtherTreasury' }, 'InvalidTreasuryOwner'],
     [{ treasuryMint: 'OtherMint' }, 'InvalidTreasuryMint'],
     [{ treasuryOwner: 'OtherOwner' }, 'InvalidTreasuryOwner'],
@@ -63,7 +61,7 @@ const { invokeSweepRemainingOnProgram } = require('../harness/sweep_remaining_ad
   }
 
   // SWP-IDEM-001: second sweep must fail deterministically via status gate.
-  const again = await invokeSweepRemainingOnProgram({ ...base, marketStatus: 'Swept', marketState: { status: 'Swept' } });
+  const again = await invokeSweepRemainingOnProgram({ ...base, marketState: { ...base.marketState, status: 'Swept' } });
   assert.equal(again.ok, false);
   assert.equal(again.error, 'MarketNotResolved');
 
