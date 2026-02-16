@@ -60,13 +60,31 @@ pub mod pitstop {
     pub fn void_market(ctx: Context<VoidMarket>, args: VoidMarketArgs) -> Result<()> {
         handlers::void_market(ctx, args)
     }
+
+    pub fn claim_resolved(ctx: Context<ClaimResolved>, args: ClaimResolvedArgs) -> Result<()> {
+        handlers::claim_resolved(ctx, args)
+    }
+
+    pub fn claim_voided(ctx: Context<ClaimVoided>, args: ClaimVoidedArgs) -> Result<()> {
+        handlers::claim_voided(ctx, args)
+    }
+
+    pub fn sweep_remaining(ctx: Context<SweepRemaining>) -> Result<()> {
+        handlers::sweep_remaining(ctx)
+    }
+
+    pub fn cancel_market(ctx: Context<CancelMarket>) -> Result<()> {
+        handlers::cancel_market(ctx)
+    }
 }
 
 mod handlers {
     use super::*;
     use std::str::FromStr;
 
-    use anchor_spl::token_interface::{Mint, TokenAccount};
+    use anchor_spl::token_interface::{
+        close_account, transfer_checked, CloseAccount, Mint, TokenAccount, TransferChecked,
+    };
 
     /// Single clock read helper so all handlers use the same on-chain time source.
     ///
@@ -77,15 +95,21 @@ mod handlers {
         Ok(Clock::get()?.unix_timestamp)
     }
 
+    fn required_token_program_pubkey() -> Result<Pubkey> {
+        Pubkey::from_str(constants::REQUIRED_TOKEN_PROGRAM)
+            .map_err(|_| error!(PitStopAnchorError::InvalidTokenProgram))
+    }
+
     pub fn initialize(ctx: Context<Initialize>, args: InitializeArgs) -> Result<()> {
         // Layer 1 validation (Anchor handler level):
         // perform explicit protocol-mapped guards before invoking parity logic.
         //
         // We intentionally map to PitStopAnchorError here so callers see the same
         // deterministic error taxonomy expected by LOCKED specs.
+        let required_token_program = required_token_program_pubkey()?;
         require_keys_eq!(
             ctx.accounts.token_program.key(),
-            Pubkey::from_str(constants::REQUIRED_TOKEN_PROGRAM).unwrap(),
+            required_token_program,
             PitStopAnchorError::InvalidTokenProgram
         );
 
@@ -136,7 +160,7 @@ mod handlers {
         config.max_total_pool_per_market = cfg.max_total_pool_per_market;
         config.max_bet_per_user_per_market = cfg.max_bet_per_user_per_market;
         config.claim_window_secs = cfg.claim_window_secs;
-        config.token_program = Pubkey::from_str(constants::REQUIRED_TOKEN_PROGRAM).unwrap();
+        config.token_program = required_token_program;
 
         // Event emission:
         // emit after successful state write so off-chain observers see committed transitions.
@@ -312,7 +336,7 @@ mod handlers {
 
         // Load/validate outcome_pool with spec-mapped error behavior.
         let expected_pool = Pubkey::find_program_address(
-            &[b"outcome", ctx.accounts.market.key().as_ref(), &[args.outcome_id]],
+            &[OUTCOME_SEED, ctx.accounts.market.key().as_ref(), &[args.outcome_id]],
             &crate::id(),
         )
         .0;
@@ -443,7 +467,7 @@ mod handlers {
         let now_ts = clock_unix_timestamp()?;
 
         let expected_pool = Pubkey::find_program_address(
-            &[b"outcome", ctx.accounts.market.key().as_ref(), &[args.winning_outcome_id]],
+            &[OUTCOME_SEED, ctx.accounts.market.key().as_ref(), &[args.winning_outcome_id]],
             &crate::id(),
         )
         .0;
@@ -513,6 +537,369 @@ mod handlers {
             market: ctx.accounts.market.key(),
             payload_hash: evt.payload_hash,
             resolution_timestamp: evt.resolution_timestamp,
+        });
+
+        Ok(())
+    }
+
+    pub fn claim_resolved(ctx: Context<ClaimResolved>, args: ClaimResolvedArgs) -> Result<()> {
+        require_keys_eq!(
+            ctx.accounts.token_program.key(),
+            ctx.accounts.config.token_program,
+            PitStopAnchorError::InvalidTokenProgram
+        );
+        require_keys_eq!(
+            ctx.accounts.usdc_mint.key(),
+            ctx.accounts.config.usdc_mint,
+            PitStopAnchorError::InvalidTreasuryMint
+        );
+        require_keys_eq!(
+            ctx.accounts.vault.key(),
+            ctx.accounts.market.vault,
+            PitStopAnchorError::OutcomeMismatch
+        );
+        require_keys_eq!(
+            ctx.accounts.user_usdc.mint,
+            ctx.accounts.usdc_mint.key(),
+            PitStopAnchorError::InvalidTreasuryMint
+        );
+        require_keys_eq!(
+            ctx.accounts.user_usdc.owner,
+            ctx.accounts.user.key(),
+            PitStopAnchorError::Unauthorized
+        );
+
+        let expected_pool = Pubkey::find_program_address(
+            &[OUTCOME_SEED, ctx.accounts.market.key().as_ref(), &[args.outcome_id]],
+            &crate::id(),
+        )
+        .0;
+        if ctx.accounts.outcome_pool.key() != expected_pool {
+            return Err(error!(PitStopAnchorError::OutcomeMismatch));
+        }
+        if ctx.accounts.outcome_pool.owner != &crate::id() {
+            return Err(error!(PitStopAnchorError::OutcomeMismatch));
+        }
+        let outcome_pool: OutcomePool = {
+            let data_ref = ctx.accounts.outcome_pool.try_borrow_data()?;
+            if data_ref.is_empty() {
+                return Err(error!(PitStopAnchorError::OutcomeMismatch));
+            }
+            let mut slice: &[u8] = &data_ref;
+            OutcomePool::try_deserialize(&mut slice)
+                .map_err(|_| error!(PitStopAnchorError::OutcomeMismatch))?
+        };
+        if outcome_pool.market != ctx.accounts.market.key() || outcome_pool.outcome_id != args.outcome_id {
+            return Err(error!(PitStopAnchorError::OutcomeMismatch));
+        }
+
+        let now_ts = clock_unix_timestamp()?;
+        let market_state = ctx.accounts.market.to_parity();
+        let input = instructions::claim_resolved::ClaimResolvedInput {
+            market: ctx.accounts.market.key().to_string(),
+            user: ctx.accounts.user.key().to_string(),
+            market_status: market_state.status,
+            now_ts,
+            resolution_timestamp: market_state.resolution_timestamp,
+            claim_window_secs: ctx.accounts.config.claim_window_secs,
+            fee_bps: ctx.accounts.config.fee_bps,
+            resolved_outcome: market_state.resolved_outcome,
+            outcome_id: args.outcome_id,
+            position_claimed: ctx.accounts.position.claimed,
+            position_amount: ctx.accounts.position.amount,
+            outcome_pool_exists: true,
+            outcome_pool_market: outcome_pool.market.to_string(),
+            outcome_pool_outcome_id: outcome_pool.outcome_id,
+            outcome_pool_amount: outcome_pool.pool_amount,
+            vault_amount: ctx.accounts.vault.amount,
+            user_usdc_amount: ctx.accounts.user_usdc.amount,
+            market_state,
+            outcome_pool_state: crate::state::OutcomePool {
+                market: outcome_pool.market.to_string(),
+                outcome_id: outcome_pool.outcome_id,
+                pool_amount: outcome_pool.pool_amount,
+            },
+            position_state: ctx.accounts.position.to_parity(),
+        };
+
+        let (new_pos, _new_vault_amount, _new_user_amount, evt) =
+            instructions::claim_resolved::claim_resolved(input).map_err(PitStopAnchorError::from)?;
+
+        if evt.payout > 0 {
+            let cpi_accounts = TransferChecked {
+                from: ctx.accounts.vault.to_account_info(),
+                mint: ctx.accounts.usdc_mint.to_account_info(),
+                to: ctx.accounts.user_usdc.to_account_info(),
+                authority: ctx.accounts.market.to_account_info(),
+            };
+            let (_market_pda, market_bump) = Pubkey::find_program_address(
+                &[MARKET_SEED, ctx.accounts.market.market_id.as_ref()],
+                &crate::id(),
+            );
+            let signer_seeds: &[&[u8]] = &[
+                MARKET_SEED,
+                ctx.accounts.market.market_id.as_ref(),
+                &[market_bump],
+            ];
+            let signer = &[signer_seeds];
+            let cpi_ctx = CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                cpi_accounts,
+                signer,
+            );
+            transfer_checked(cpi_ctx, evt.payout, ctx.accounts.usdc_mint.decimals)?;
+        }
+
+        ctx.accounts.position.apply_parity(&new_pos);
+
+        emit!(anchor_events::Claimed {
+            market: ctx.accounts.market.key(),
+            user: ctx.accounts.user.key(),
+            outcome_id: evt.outcome_id,
+            payout: evt.payout,
+            claimed_at: evt.claimed_at,
+        });
+
+        Ok(())
+    }
+
+    pub fn claim_voided(ctx: Context<ClaimVoided>, args: ClaimVoidedArgs) -> Result<()> {
+        require_keys_eq!(
+            ctx.accounts.token_program.key(),
+            ctx.accounts.config.token_program,
+            PitStopAnchorError::InvalidTokenProgram
+        );
+        require_keys_eq!(
+            ctx.accounts.usdc_mint.key(),
+            ctx.accounts.config.usdc_mint,
+            PitStopAnchorError::InvalidTreasuryMint
+        );
+        require_keys_eq!(
+            ctx.accounts.vault.key(),
+            ctx.accounts.market.vault,
+            PitStopAnchorError::OutcomeMismatch
+        );
+        require_keys_eq!(
+            ctx.accounts.user_usdc.mint,
+            ctx.accounts.usdc_mint.key(),
+            PitStopAnchorError::InvalidTreasuryMint
+        );
+        require_keys_eq!(
+            ctx.accounts.user_usdc.owner,
+            ctx.accounts.user.key(),
+            PitStopAnchorError::Unauthorized
+        );
+
+        let now_ts = clock_unix_timestamp()?;
+        let input = instructions::claim_voided::ClaimVoidedInput {
+            market: ctx.accounts.market.key().to_string(),
+            user: ctx.accounts.user.key().to_string(),
+            market_status: ctx.accounts.market.to_parity().status,
+            resolution_timestamp: ctx.accounts.market.resolution_timestamp,
+            claim_window_secs: ctx.accounts.config.claim_window_secs,
+            now_ts,
+            outcome_id: args.outcome_id,
+            user_usdc_amount: ctx.accounts.user_usdc.amount,
+            vault_amount: ctx.accounts.vault.amount,
+            position_state: ctx.accounts.position.to_parity(),
+        };
+
+        let (new_pos, _new_user_amount, _new_vault_amount, evt) =
+            instructions::claim_voided::claim_voided(input).map_err(PitStopAnchorError::from)?;
+
+        if evt.payout > 0 {
+            let cpi_accounts = TransferChecked {
+                from: ctx.accounts.vault.to_account_info(),
+                mint: ctx.accounts.usdc_mint.to_account_info(),
+                to: ctx.accounts.user_usdc.to_account_info(),
+                authority: ctx.accounts.market.to_account_info(),
+            };
+            let (_market_pda, market_bump) = Pubkey::find_program_address(
+                &[MARKET_SEED, ctx.accounts.market.market_id.as_ref()],
+                &crate::id(),
+            );
+            let signer_seeds: &[&[u8]] = &[
+                MARKET_SEED,
+                ctx.accounts.market.market_id.as_ref(),
+                &[market_bump],
+            ];
+            let signer = &[signer_seeds];
+            let cpi_ctx = CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                cpi_accounts,
+                signer,
+            );
+            transfer_checked(cpi_ctx, evt.payout, ctx.accounts.usdc_mint.decimals)?;
+        }
+
+        ctx.accounts.position.apply_parity(&new_pos);
+
+        emit!(anchor_events::Claimed {
+            market: ctx.accounts.market.key(),
+            user: ctx.accounts.user.key(),
+            outcome_id: evt.outcome_id,
+            payout: evt.payout,
+            claimed_at: evt.claimed_at,
+        });
+
+        Ok(())
+    }
+
+    pub fn sweep_remaining(ctx: Context<SweepRemaining>) -> Result<()> {
+        require_keys_eq!(
+            ctx.accounts.token_program.key(),
+            ctx.accounts.config.token_program,
+            PitStopAnchorError::InvalidTokenProgram
+        );
+        require_keys_eq!(
+            ctx.accounts.usdc_mint.key(),
+            ctx.accounts.config.usdc_mint,
+            PitStopAnchorError::InvalidTreasuryMint
+        );
+        require_keys_eq!(
+            ctx.accounts.treasury.mint,
+            ctx.accounts.usdc_mint.key(),
+            PitStopAnchorError::InvalidTreasuryMint
+        );
+        require_keys_eq!(
+            ctx.accounts.treasury.owner,
+            ctx.accounts.config.treasury_authority,
+            PitStopAnchorError::InvalidTreasuryOwner
+        );
+        require_keys_eq!(
+            ctx.accounts.vault.key(),
+            ctx.accounts.market.vault,
+            PitStopAnchorError::OutcomeMismatch
+        );
+
+        let now_ts = clock_unix_timestamp()?;
+        let market_state = ctx.accounts.market.to_parity();
+        let input = instructions::sweep_remaining::SweepRemainingInput {
+            authority: ctx.accounts.authority.key().to_string(),
+            config_authority: ctx.accounts.config.authority.to_string(),
+            market: ctx.accounts.market.key().to_string(),
+            now_ts,
+            claim_window_secs: ctx.accounts.config.claim_window_secs,
+            token_program: ctx.accounts.token_program.key().to_string(),
+            treasury: ctx.accounts.treasury.key().to_string(),
+            config_treasury: ctx.accounts.config.treasury.to_string(),
+            treasury_mint: ctx.accounts.treasury.mint.to_string(),
+            usdc_mint: ctx.accounts.usdc_mint.key().to_string(),
+            treasury_owner: ctx.accounts.treasury.owner.to_string(),
+            treasury_authority: ctx.accounts.config.treasury_authority.to_string(),
+            vault_amount: ctx.accounts.vault.amount,
+            treasury_amount: ctx.accounts.treasury.amount,
+            market_state,
+        };
+
+        let (new_market, _new_treasury_amount, swept_amount, _vault_closed, _vault_exists, _used_seeds, evt) =
+            instructions::sweep_remaining::sweep_remaining(input).map_err(PitStopAnchorError::from)?;
+
+        let (_market_pda, market_bump) = Pubkey::find_program_address(
+            &[MARKET_SEED, ctx.accounts.market.market_id.as_ref()],
+            &crate::id(),
+        );
+        let signer_seeds: &[&[u8]] = &[
+            MARKET_SEED,
+            ctx.accounts.market.market_id.as_ref(),
+            &[market_bump],
+        ];
+        let signer = &[signer_seeds];
+
+        if swept_amount > 0 {
+            let transfer_accounts = TransferChecked {
+                from: ctx.accounts.vault.to_account_info(),
+                mint: ctx.accounts.usdc_mint.to_account_info(),
+                to: ctx.accounts.treasury.to_account_info(),
+                authority: ctx.accounts.market.to_account_info(),
+            };
+            let transfer_ctx = CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                transfer_accounts,
+                signer,
+            );
+            transfer_checked(transfer_ctx, swept_amount, ctx.accounts.usdc_mint.decimals)?;
+        }
+
+        let close_accounts = CloseAccount {
+            account: ctx.accounts.vault.to_account_info(),
+            destination: ctx.accounts.close_destination.to_account_info(),
+            authority: ctx.accounts.market.to_account_info(),
+        };
+        let close_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            close_accounts,
+            signer,
+        );
+        close_account(close_ctx)?;
+
+        ctx.accounts.market.apply_parity(&new_market);
+
+        emit!(anchor_events::MarketSweptEvent {
+            market: ctx.accounts.market.key(),
+            amount: evt.amount,
+            to_treasury: ctx.accounts.treasury.key(),
+            timestamp: evt.timestamp,
+        });
+
+        Ok(())
+    }
+
+    pub fn cancel_market(ctx: Context<CancelMarket>) -> Result<()> {
+        require_keys_eq!(
+            ctx.accounts.token_program.key(),
+            ctx.accounts.config.token_program,
+            PitStopAnchorError::InvalidTokenProgram
+        );
+        require_keys_eq!(
+            ctx.accounts.vault.key(),
+            ctx.accounts.market.vault,
+            PitStopAnchorError::OutcomeMismatch
+        );
+
+        let now_ts = clock_unix_timestamp()?;
+        let input = instructions::cancel_market::CancelMarketInput {
+            authority: ctx.accounts.authority.key().to_string(),
+            config_authority: ctx.accounts.config.authority.to_string(),
+            close_destination: ctx.accounts.close_destination.key().to_string(),
+            market: ctx.accounts.market.key().to_string(),
+            market_status: ctx.accounts.market.to_parity().status,
+            now_ts,
+            lock_timestamp: ctx.accounts.market.lock_timestamp,
+            market_state: ctx.accounts.market.to_parity(),
+            vault_amount: ctx.accounts.vault.amount,
+        };
+
+        let (new_market, evt) =
+            instructions::cancel_market::cancel_market(input).map_err(PitStopAnchorError::from)?;
+
+        let (_market_pda, market_bump) = Pubkey::find_program_address(
+            &[MARKET_SEED, ctx.accounts.market.market_id.as_ref()],
+            &crate::id(),
+        );
+        let signer_seeds: &[&[u8]] = &[
+            MARKET_SEED,
+            ctx.accounts.market.market_id.as_ref(),
+            &[market_bump],
+        ];
+        let signer = &[signer_seeds];
+        let close_accounts = CloseAccount {
+            account: ctx.accounts.vault.to_account_info(),
+            destination: ctx.accounts.close_destination.to_account_info(),
+            authority: ctx.accounts.market.to_account_info(),
+        };
+        let close_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            close_accounts,
+            signer,
+        );
+        close_account(close_ctx)?;
+
+        ctx.accounts.market.apply_parity(&new_market);
+
+        emit!(anchor_events::MarketCancelled {
+            market: ctx.accounts.market.key(),
+            timestamp: evt.timestamp,
         });
 
         Ok(())

@@ -67,3 +67,26 @@ pub struct MarketVoided {
     pub payload_hash: [u8; 32],
     pub resolution_timestamp: i64,
 }
+
+#[event]
+pub struct Claimed {
+    pub market: Pubkey,
+    pub user: Pubkey,
+    pub outcome_id: u8,
+    pub payout: u64,
+    pub claimed_at: i64,
+}
+
+#[event]
+pub struct MarketSweptEvent {
+    pub market: Pubkey,
+    pub amount: u64,
+    pub to_treasury: Pubkey,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct MarketCancelled {
+    pub market: Pubkey,
+    pub timestamp: i64,
+}

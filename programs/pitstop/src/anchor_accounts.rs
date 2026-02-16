@@ -306,7 +306,11 @@ pub struct AddOutcome<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 
     #[account(
@@ -333,7 +337,11 @@ pub struct FinalizeSeeding<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 }
 
@@ -358,7 +366,11 @@ pub struct PlaceBet<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 
     /// CHECK: validated/decoded in handler so missing/wrong relation can map to OutcomeMismatch.
@@ -396,7 +408,11 @@ pub struct LockMarket<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 }
 
@@ -416,7 +432,11 @@ pub struct ResolveMarket<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
 
     /// CHECK: validated/decoded in handler so missing/wrong relation can map to OutcomeMismatch.
@@ -439,6 +459,151 @@ pub struct VoidMarket<'info> {
     #[account(seeds = [CONFIG_SEED], bump)]
     pub config: Account<'info, Config>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
     pub market: Account<'info, Market>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct ClaimResolvedArgs {
+    pub outcome_id: u8,
+}
+
+/// Accounts for `claim_resolved`.
+#[derive(Accounts)]
+#[instruction(args: ClaimResolvedArgs)]
+pub struct ClaimResolved<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+
+    #[account(seeds = [CONFIG_SEED], bump)]
+    pub config: Account<'info, Config>,
+
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
+    pub market: Account<'info, Market>,
+
+    #[account(
+        mut,
+        seeds = [POSITION_SEED, market.key().as_ref(), user.key().as_ref(), &[args.outcome_id]],
+        bump
+    )]
+    pub position: Account<'info, Position>,
+
+    /// CHECK: validated/decoded in handler so missing/wrong relation can map to OutcomeMismatch.
+    #[account(mut)]
+    pub outcome_pool: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub user_usdc: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub vault: InterfaceAccount<'info, TokenAccount>,
+
+    pub usdc_mint: InterfaceAccount<'info, Mint>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct ClaimVoidedArgs {
+    pub outcome_id: u8,
+}
+
+/// Accounts for `claim_voided`.
+#[derive(Accounts)]
+#[instruction(args: ClaimVoidedArgs)]
+pub struct ClaimVoided<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+
+    #[account(seeds = [CONFIG_SEED], bump)]
+    pub config: Account<'info, Config>,
+
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
+    pub market: Account<'info, Market>,
+
+    #[account(
+        mut,
+        seeds = [POSITION_SEED, market.key().as_ref(), user.key().as_ref(), &[args.outcome_id]],
+        bump
+    )]
+    pub position: Account<'info, Position>,
+
+    #[account(mut)]
+    pub user_usdc: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub vault: InterfaceAccount<'info, TokenAccount>,
+
+    pub usdc_mint: InterfaceAccount<'info, Mint>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+}
+
+/// Accounts for `sweep_remaining`.
+#[derive(Accounts)]
+pub struct SweepRemaining<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    #[account(seeds = [CONFIG_SEED], bump)]
+    pub config: Account<'info, Config>,
+
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
+    pub market: Account<'info, Market>,
+
+    #[account(mut)]
+    pub vault: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub treasury: InterfaceAccount<'info, TokenAccount>,
+
+    /// CHECK: destination for recovered rent from vault close.
+    #[account(mut)]
+    pub close_destination: SystemAccount<'info>,
+
+    pub usdc_mint: InterfaceAccount<'info, Mint>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+}
+
+/// Accounts for `cancel_market`.
+#[derive(Accounts)]
+pub struct CancelMarket<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    #[account(seeds = [CONFIG_SEED], bump)]
+    pub config: Account<'info, Config>,
+
+    #[account(
+        mut,
+        seeds = [MARKET_SEED, market.market_id.as_ref()],
+        bump
+    )]
+    pub market: Account<'info, Market>,
+
+    #[account(mut)]
+    pub vault: InterfaceAccount<'info, TokenAccount>,
+
+    /// CHECK: destination for recovered rent from vault close.
+    #[account(mut)]
+    pub close_destination: SystemAccount<'info>,
+
+    pub token_program: Interface<'info, TokenInterface>,
 }
