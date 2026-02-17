@@ -50,4 +50,4 @@ jobs:
         if: ${{ inputs.run_smoke_only == 'true' }}
         env:
           DEVNET_WALLET_JSON_B64: ${{ secrets.SOLANA_DEVNET_KEYPAIR_B64 }}
-        run: scripts/devnet/smoke.sh
+        run: scripts/devnet/smoke.sh --source onchain

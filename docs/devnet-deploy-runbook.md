@@ -46,10 +46,22 @@ Outputs:
 ```bash
 scripts/devnet/smoke.sh
 ```
+Default mode is `auto`:
+- use local IDL at `artifacts/idl/pitstop.latest.json` when present
+- otherwise fetch IDL from devnet on-chain metadata
+
+Explicit modes:
+```bash
+scripts/devnet/smoke.sh --source local
+scripts/devnet/smoke.sh --source onchain
+```
 Checks:
 - program account exists on devnet
-- IDL can be fetched
-- required instruction names exist in fetched IDL
+- IDL source is readable (local artifact or on-chain fetch)
+- required instruction names exist in checked IDL
+
+CI note:
+- `smoke.sh` supports `DEVNET_WALLET_JSON_B64` and will materialize `~/.config/solana/id.json` when provided.
 
 ## GitHub Actions
 Workflow: `.github/workflows/devnet-deploy.yml`

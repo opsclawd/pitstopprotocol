@@ -50,6 +50,6 @@ anchor build
 anchor deploy --provider.cluster devnet
 
 scripts/devnet/publish_idl.sh
-scripts/devnet/smoke.sh
+scripts/devnet/smoke.sh --source local
 
 echo "Devnet deploy pipeline complete."
