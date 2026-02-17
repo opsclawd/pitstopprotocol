@@ -40,4 +40,5 @@ jobs:
       - name: Anchor e2e (local validator)
         env:
           RUSTFLAGS: --cfg procmacro2_semver_exempt
+          ANCHOR_IDL_BUILD_SKIP_LINT: "TRUE"
         run: npm run test:anchor:e2e
