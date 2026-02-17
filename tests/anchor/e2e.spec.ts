@@ -114,23 +114,21 @@ describe("anchor-e2e", () => {
 
   const program = anchor.workspace.Pitstop as anchor.Program<any>;
 
-  it("create→seed→open→bet→lock→resolve→claim→sweep (+ deterministic negative cases)", async () => {
-    const connection: any = provider.connection;
-    const payer = (provider.wallet as any).payer as Keypair;
+  // Shared config/mint across tests: the Config PDA is fixed, so reusing the
+  // same USDC mint/treasury avoids cross-test mismatches when the validator is
+  // reused for the entire `anchor test` run.
+  const connection: any = provider.connection;
+  const payer = (provider.wallet as any).payer as Keypair;
 
-    // Extra actors.
-    const treasuryAuthority = Keypair.generate();
-    const userA = Keypair.generate();
-    const userB = Keypair.generate();
+  const treasuryAuthority = Keypair.generate();
+  let usdcMint: PublicKey;
+  let treasuryAta: PublicKey;
+  let config: PublicKey;
 
-    await Promise.all([
-      airdrop(connection, treasuryAuthority.publicKey),
-      airdrop(connection, userA.publicKey),
-      airdrop(connection, userB.publicKey),
-    ]);
+  before(async () => {
+    await airdrop(connection, treasuryAuthority.publicKey);
 
-    // USDC mint + token accounts.
-    const usdcMint = await createMint(
+    usdcMint = await createMint(
       connection,
       payer,
       payer.publicKey,
@@ -141,7 +139,7 @@ describe("anchor-e2e", () => {
       TOKEN_PROGRAM_ID,
     );
 
-    const treasuryAta = await getOrCreateAssociatedTokenAccount(
+    const treasury = await getOrCreateAssociatedTokenAccount(
       connection,
       payer,
       usdcMint,
@@ -151,6 +149,45 @@ describe("anchor-e2e", () => {
       undefined,
       TOKEN_PROGRAM_ID,
     );
+    treasuryAta = treasury.address;
+
+    [config] = findConfigPda(program.programId);
+
+    // Initialize once; if already initialized (e.g. when reusing a running
+    // local validator), leave it as-is.
+    try {
+      await program.account.config.fetch(config);
+    } catch {
+      await program.methods
+        .initialize({
+          treasuryAuthority: treasuryAuthority.publicKey,
+          maxTotalPoolPerMarket: new anchor.BN(10_000_000_000),
+          maxBetPerUserPerMarket: new anchor.BN(5_000_000_000),
+          claimWindowSecs: new anchor.BN(2),
+        })
+        .accounts({
+          authority: payer.publicKey,
+          config,
+          usdcMint,
+          treasury: treasuryAta,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc({ commitment: "confirmed" });
+    }
+  });
+
+  it("create→seed→open→bet→lock→resolve→claim→sweep (+ deterministic negative cases)", async () => {
+    // Extra actors.
+    const userA = Keypair.generate();
+    const userB = Keypair.generate();
+
+    await Promise.all([
+      airdrop(connection, userA.publicKey),
+      airdrop(connection, userB.publicKey),
+    ]);
+
+    // USDC token accounts.
 
     const userAAta = await getOrCreateAssociatedTokenAccount(
       connection,
@@ -196,24 +233,7 @@ describe("anchor-e2e", () => {
       TOKEN_PROGRAM_ID,
     );
 
-    // initialize
-    const [config] = findConfigPda(program.programId);
-    await program.methods
-      .initialize({
-        treasuryAuthority: treasuryAuthority.publicKey,
-        maxTotalPoolPerMarket: new anchor.BN(10_000_000_000),
-        maxBetPerUserPerMarket: new anchor.BN(5_000_000_000),
-        claimWindowSecs: new anchor.BN(2),
-      })
-      .accounts({
-        authority: payer.publicKey,
-        config,
-        usdcMint,
-        treasury: treasuryAta.address,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-      })
-      .rpc({ commitment: "confirmed" });
+    // (Config is initialized in the suite-level before() hook.)
 
     // create_market (canonical market_id is checked on-chain, so use event_id/mkt_type/rules_version that match).
     const now0 = await getNow(connection);
@@ -408,7 +428,7 @@ describe("anchor-e2e", () => {
           config,
           market,
           vault,
-          treasury: treasuryAta.address,
+          treasury: treasuryAta,
           closeDestination: payer.publicKey,
           usdcMint,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -429,7 +449,7 @@ describe("anchor-e2e", () => {
         config,
         market,
         vault,
-        treasury: treasuryAta.address,
+        treasury: treasuryAta,
         closeDestination: payer.publicKey,
         usdcMint,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -441,38 +461,9 @@ describe("anchor-e2e", () => {
   });
 
   it("create→seed→open→bet→lock→void→claim_voided→sweep", async () => {
-    const connection: any = provider.connection;
-    const payer = (provider.wallet as any).payer as Keypair;
-
-    const treasuryAuthority = Keypair.generate();
     const user = Keypair.generate();
 
-    await Promise.all([
-      airdrop(connection, treasuryAuthority.publicKey),
-      airdrop(connection, user.publicKey),
-    ]);
-
-    const usdcMint = await createMint(
-      connection,
-      payer,
-      payer.publicKey,
-      null,
-      6,
-      undefined,
-      undefined,
-      TOKEN_PROGRAM_ID,
-    );
-
-    const treasuryAta = await getOrCreateAssociatedTokenAccount(
-      connection,
-      payer,
-      usdcMint,
-      treasuryAuthority.publicKey,
-      true,
-      "confirmed",
-      undefined,
-      TOKEN_PROGRAM_ID,
-    );
+    await airdrop(connection, user.publicKey);
 
     const userAta = await getOrCreateAssociatedTokenAccount(
       connection,
@@ -496,30 +487,6 @@ describe("anchor-e2e", () => {
       undefined,
       TOKEN_PROGRAM_ID,
     );
-
-    const [config] = findConfigPda(program.programId);
-
-    // Idempotent init: if already exists from prior test, skip.
-    try {
-      await program.account.config.fetch(config);
-    } catch {
-      await program.methods
-        .initialize({
-          treasuryAuthority: treasuryAuthority.publicKey,
-          maxTotalPoolPerMarket: new anchor.BN(10_000_000_000),
-          maxBetPerUserPerMarket: new anchor.BN(5_000_000_000),
-          claimWindowSecs: new anchor.BN(2),
-        })
-        .accounts({
-          authority: payer.publicKey,
-          config,
-          usdcMint,
-          treasury: treasuryAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        })
-        .rpc({ commitment: "confirmed" });
-    }
 
     const now0 = await getNow(connection);
     const lockTimestamp = now0 + 3;
@@ -617,7 +584,7 @@ describe("anchor-e2e", () => {
         config,
         market,
         vault,
-        treasury: treasuryAta.address,
+        treasury: treasuryAta,
         closeDestination: payer.publicKey,
         usdcMint,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -629,47 +596,6 @@ describe("anchor-e2e", () => {
   });
 
   it("create→cancel (seeding-only, empty vault)", async () => {
-    const connection: any = provider.connection;
-    const payer = (provider.wallet as any).payer as Keypair;
-
-    const usdcMint = await createMint(connection, payer, payer.publicKey, null, 6, undefined, undefined, TOKEN_PROGRAM_ID);
-
-    const treasuryAuthority = Keypair.generate();
-    await airdrop(connection, treasuryAuthority.publicKey);
-
-    const treasuryAta = await getOrCreateAssociatedTokenAccount(
-      connection,
-      payer,
-      usdcMint,
-      treasuryAuthority.publicKey,
-      true,
-      "confirmed",
-      undefined,
-      TOKEN_PROGRAM_ID,
-    );
-
-    const [config] = findConfigPda(program.programId);
-    try {
-      await program.account.config.fetch(config);
-    } catch {
-      await program.methods
-        .initialize({
-          treasuryAuthority: treasuryAuthority.publicKey,
-          maxTotalPoolPerMarket: new anchor.BN(10_000_000_000),
-          maxBetPerUserPerMarket: new anchor.BN(5_000_000_000),
-          claimWindowSecs: new anchor.BN(2),
-        })
-        .accounts({
-          authority: payer.publicKey,
-          config,
-          usdcMint,
-          treasury: treasuryAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        })
-        .rpc({ commitment: "confirmed" });
-    }
-
     const now0 = await getNow(connection);
     const lockTimestamp = now0 + 30;
     const eventId = bytes32FromString("event-cancel");
