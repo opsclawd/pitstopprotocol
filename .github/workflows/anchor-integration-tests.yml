@@ -38,4 +38,6 @@ jobs:
           solana-keygen new --no-bip39-passphrase -s -o "$HOME/.config/solana/id.json"
 
       - name: Anchor e2e (local validator)
+        env:
+          RUSTFLAGS: --cfg procmacro2_semver_exempt
         run: npm run test:anchor:e2e
