@@ -9,8 +9,8 @@ pitstop = "6gTRvbxrx2tNGuV8sw4mR7GQ3bDaHLcs6LosjHmw2xcW"
 pitstop = "6gTRvbxrx2tNGuV8sw4mR7GQ3bDaHLcs6LosjHmw2xcW"
 
 [provider]
-cluster = "Devnet"
+cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "cargo test --workspace --all-targets --locked"
+test = "node node_modules/mocha/bin/mocha -t 1000000 -r ts-node/register tests/anchor/**/*.ts"
