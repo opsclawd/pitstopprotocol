@@ -20,12 +20,15 @@ custom-heap = []
 custom-panic = []
 
 [dependencies]
-anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
-anchor-spl = { version = "0.30.1" }
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+anchor-spl = { version = "0.32.1" }
 sha2 = "0.10"
 
 [dev-dependencies]
-solana-program-test = "1.18.26"
-solana-sdk = "1.18.26"
-spl-token = { version = "4.0.0", features = ["no-entrypoint"] }
-spl-associated-token-account = { version = "2.3.0", features = ["no-entrypoint"] }
+# Solana tooling / SDK crates aligned to Solana 2.3.x
+solana-program-test = "2.3.0"
+solana-sdk = "2.3.0"
+
+# SPL crates aligned with Solana 2.3.x
+spl-token = { version = "7.0.0", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "6.0.0", features = ["no-entrypoint"] }
