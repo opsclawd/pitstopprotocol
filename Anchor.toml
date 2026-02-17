@@ -1,0 +1,16 @@
+[features]
+seeds = false
+skip-lint = false
+
+[programs.localnet]
+pitstop = "6gTRvbxrx2tNGuV8sw4mR7GQ3bDaHLcs6LosjHmw2xcW"
+
+[programs.devnet]
+pitstop = "6gTRvbxrx2tNGuV8sw4mR7GQ3bDaHLcs6LosjHmw2xcW"
+
+[provider]
+cluster = "Devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "cargo test --workspace --all-targets --locked"

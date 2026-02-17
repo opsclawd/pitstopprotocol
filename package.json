@@ -19,7 +19,12 @@
     "test:harness": "node tests/harness/smoke.spec.js",
     "test:harness:deterministic": "HARNESS_NOW_SECS=1800000000 node tests/harness/smoke.spec.js",
     "test:unit": "node tests/unit/canonical_ids.spec.js && node tests/unit/timestamp_rules.spec.js && node tests/unit/math.spec.js",
-    "test:all": "node scripts/run_all_tests.js"
+    "test:all": "node scripts/run_all_tests.js",
+    "devnet:sync-program-id": "node scripts/devnet/apply_program_ids.js",
+    "devnet:sync-program-id:check": "node scripts/devnet/apply_program_ids.js --check",
+    "devnet:publish-idl": "scripts/devnet/publish_idl.sh",
+    "devnet:smoke": "scripts/devnet/smoke.sh",
+    "devnet:deploy": "scripts/devnet/deploy.sh"
   },
   "devDependencies": {
     "turbo": "^2.5.0",

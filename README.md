@@ -40,3 +40,9 @@ This repo is now in **spec-first + TDD pivot mode** for a USDC-based Anchor prot
 - Legacy pre-pivot app scaffolds and docs were removed.
 - `packages/core/src/protocol_primitives.cjs` is retained intentionally as the canonical shared primitives module used by unit tests and future implementation code.
 - `programs/pitstop/` is now scaffolded as the spec-aligned Anchor target directory for upcoming protocol implementation issues.
+
+## Devnet deploy pipeline
+Issue #106 adds deploy/runbook scaffolding for devnet:
+- Runbook: `docs/devnet-deploy-runbook.md`
+- Scripts: `scripts/devnet/`
+- Workflow: `.github/workflows/devnet-deploy.yml`
