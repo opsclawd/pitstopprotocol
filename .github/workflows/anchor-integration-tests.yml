@@ -29,6 +29,12 @@ jobs:
           echo "$(npm config get prefix)/bin" >> "$GITHUB_PATH"
           anchor --version
 
+      - name: Print toolchain versions
+        run: |
+          rustc -V
+          cargo -V
+          anchor --version
+
       - name: Install JS deps
         run: npm ci --ignore-scripts
 
